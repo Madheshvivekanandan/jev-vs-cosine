@@ -33,6 +33,7 @@ def _context(
 ) -> ReportContext:
     return ReportContext(
         embedding_model="bge@abc",
+        cross_encoder_model=None,
         catalog_version="cat.v1",
         train_duplicates_removed=7,
         jev_route=jev_route,
@@ -106,5 +107,45 @@ def test_render_accuracy_chart_writes_png(tmp_path: Path, *, with_jev: bool) -> 
     output = tmp_path / "chart.png"
 
     render_accuracy_chart(_cosine_results(), _jev() if with_jev else None, output)
+
+    assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def _cross(accuracy: float) -> MethodResult:
+    return make_result(
+        BenchmarkMethod.CROSS_ENCODER_DESCRIPTIONS,
+        examples_per_label=0,
+        seed=None,
+        accuracy=accuracy,
+    )
+
+
+def test_report_with_cross_encoder_compares_it_to_jev() -> None:
+    report = build_markdown_report(
+        _cosine_results(), _jev(0.85), _context(), cross_encoder_result=_cross(0.80)
+    )
+
+    assert "| D · cross-encoder vs descriptions |" in report
+    assert "scores **80.0%**, -5.0 points vs Jev" in report
+
+
+def test_report_with_cross_encoder_but_no_jev_compares_it_to_cosine() -> None:
+    report = build_markdown_report(
+        _cosine_results(),
+        None,
+        _context(jev_route=None, jev_catalog=None),
+        cross_encoder_result=_cross(0.75),
+    )
+
+    assert "+5.0 points vs cosine vs descriptions" in report
+
+
+@pytest.mark.parametrize("accuracy", [0.6, 0.9])
+def test_render_accuracy_chart_with_cross_encoder_above_or_below_a(
+    tmp_path: Path, accuracy: float
+) -> None:
+    output = tmp_path / "chart.png"
+
+    render_accuracy_chart(_cosine_results(), _jev(), output, cross_encoder_result=_cross(accuracy))
 
     assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"

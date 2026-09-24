@@ -93,3 +93,31 @@ def test_main_with_misspelled_env_key_fails_without_echoing_its_value(
     assert exit_code == 1
     assert "jev_apikey" in error
     assert "vck_SECRET_TYPO_123" not in error
+
+
+def test_build_parser_has_cross_encoder_command_with_limit() -> None:
+    arguments = cli.build_parser().parse_args(["run-cross-encoder", "--limit", "249"])
+
+    assert (arguments.command, arguments.limit) == ("run-cross-encoder", 249)
+
+
+def test_main_report_includes_cross_encoder_results_when_present(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _use_settings(monkeypatch, tmp_path)
+    repository = ResultsRepository(tmp_path / "results")
+    description = make_result(
+        BenchmarkMethod.COSINE_DESCRIPTIONS, examples_per_label=0, seed=None, accuracy=0.7
+    )
+    repository.save_runs("cosine", [MethodRun(description, ()), MethodRun(make_result(), ())])
+    cross = make_result(
+        BenchmarkMethod.CROSS_ENCODER_DESCRIPTIONS, examples_per_label=0, seed=None, accuracy=0.75
+    )
+    repository.save_runs("cross_encoder", [MethodRun(cross, ())])
+    repository.save_metadata("cross_encoder", {"cross_encoder_model": "reranker@abc"})
+
+    assert cli.main(["report"]) == 0
+
+    report = (tmp_path / "results" / "REPORT.md").read_text(encoding="utf-8")
+    assert "| D · cross-encoder vs descriptions |" in report
+    assert "reranker@abc" in report
