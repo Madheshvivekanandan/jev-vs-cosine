@@ -47,6 +47,7 @@ class BenchmarkSettings(BaseSettings):
     results_dir: Path = Path("results")
     catalog_path: Path = Path("prompts/banking77_intents.v1.json")
     probes_dir: Path = Path("probes")
+    reference_cases_path: Path = Path("fingerprints/typesafe_reference.v1.json")
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     @field_validator("jev_base_url")
