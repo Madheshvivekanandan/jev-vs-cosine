@@ -148,3 +148,8 @@ each method's answers, for error analysis.
 - Jev results come from a free route. If you change the route, compare within one route,
   not across routes.
 - Jev latency depends heavily on distance to its US-hosted servers.
+
+## License
+
+Code: [MIT](LICENSE). The Banking77 data and the messages quoted in `results/predictions/`
+stay under PolyAI's CC BY 4.0.
