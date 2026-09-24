@@ -207,3 +207,33 @@ def test_report_for_a_probe_names_it_in_the_notes() -> None:
 
     assert "messages of probe `tricky.v1`" in report
     assert "13 per category" not in report
+
+
+def _jev_plus(accuracy: float) -> MethodResult:
+    return make_result(
+        BenchmarkMethod.JEV_WITH_EXAMPLES, examples_per_label=5, seed=1, accuracy=accuracy
+    )
+
+
+def test_report_with_jev_plus_compares_it_on_the_same_examples() -> None:
+    results = BenchmarkResults(
+        _cosine_results(),
+        jev=_jev(0.85),
+        trained=[_trained(5, 0.84)],
+        jev_with_examples=_jev_plus(0.90),
+    )
+
+    report = build_markdown_report(results, _context())
+
+    assert "| B+ · Jev with past examples in its descriptions | 5 |" in report
+    assert "Jev scores **90.0%** (+5.0 points vs no examples)" in report
+    assert "C 78.0%, E 84.0%" in report
+
+
+def test_render_chart_with_jev_plus(tmp_path: Path) -> None:
+    output = tmp_path / "chart.png"
+    results = BenchmarkResults(_cosine_results(), jev=_jev(), jev_with_examples=_jev_plus(0.9))
+
+    render_accuracy_chart(results, output)
+
+    assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"

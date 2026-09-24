@@ -41,6 +41,12 @@ def _rows(
     rows = [_result_row("A · cosine vs descriptions", description)]
     if results.jev is not None:
         rows.append(_result_row("B · Jev", results.jev))
+    if results.jev_with_examples is not None:
+        rows.append(
+            _result_row(
+                "B+ · Jev with past examples in its descriptions", results.jev_with_examples
+            )
+        )
     if results.cross_encoder is not None:
         rows.append(_result_row("D · cross-encoder vs descriptions", results.cross_encoder))
     rows.extend(_aggregate_row(_C_NAME, a, examples) for a in aggregate_across_seeds(examples))
@@ -55,9 +61,28 @@ def _headlines(
     lines = [_headline(description, results.jev, aggregates)]
     if results.trained:
         lines.append(_trained_line(results.jev, aggregate_across_seeds(results.trained)))
+    if results.jev_with_examples is not None:
+        lines.append(_jev_with_examples_line(results, results.jev_with_examples))
     if results.cross_encoder is not None:
         lines.append(_cross_encoder_line(description, results.jev, results.cross_encoder))
     return lines
+
+
+def _jev_with_examples_line(results: BenchmarkResults, plus: MethodResult) -> str:
+    per_label, seed = plus.examples_per_label, plus.seed
+    same = [
+        r
+        for r in [*results.cosine, *results.trained]
+        if r.examples_per_label == per_label and r.seed == seed
+    ]
+    peers = ", ".join(f"{r.method.value[0]} {r.accuracy:.1%}" for r in same)
+    versus = ""
+    if results.jev is not None:
+        versus = f" ({(plus.accuracy - results.jev.accuracy) * 100:+.1f} points vs no examples)"
+    return (
+        f"Given the same {per_label} past examples per category inside its descriptions "
+        f"(B+), Jev scores **{plus.accuracy:.1%}**{versus}. With those exact examples: {peers}."
+    )
 
 
 def _trained_line(jev_result: MethodResult | None, trained: Sequence[SeedAggregate]) -> str:
@@ -165,6 +190,8 @@ def _notes(test_messages: int, aggregates: Sequence[SeedAggregate], context: Rep
         "on CPU, with no examples. Its latency is all 77 pairs for one message.",
         "- E trains a logistic-regression classifier on the embeddings of the same past "
         "examples C votes with (same seeds, same messages). Training is offline and untimed.",
+        "- B+ appends the seed-1 past examples C and E use at that setting to each of Jev's "
+        "category descriptions, so its catalog, token count and cache namespace differ from B.",
         "- Latency for A and C is local embedding plus scoring per message. For Jev it is the "
         "full network round trip, including retry waits on routes with retries enabled.",
         "- List-price cost is what the run would cost at "

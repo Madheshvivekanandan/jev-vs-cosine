@@ -4,10 +4,12 @@ import pytest
 
 from app import main as cli
 from app.core.settings import BenchmarkSettings
+from app.domain.benchmark_inputs import BenchmarkInputs
 from app.domain.benchmark_method import BenchmarkMethod
+from app.domain.errors.configuration_error import ConfigurationError
 from app.domain.method_run import MethodRun
 from app.repositories.results_repository import ResultsRepository
-from tests.conftest import make_result
+from tests.conftest import make_catalog, make_result
 
 
 def _use_settings(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -145,3 +147,17 @@ def test_results_for_keeps_each_experiment_in_its_own_folder(
     repository = cli._results_for(settings, cli.build_parser().parse_args(argv))  # noqa: SLF001 - folder layout is the contract
 
     assert repository.path_for("x.json").parent == Path(expected).resolve()
+
+
+def test_jev_catalog_without_examples_is_the_plain_catalog() -> None:
+    inputs = BenchmarkInputs(make_catalog(), [], [], 0)
+
+    assert cli._jev_catalog(inputs, None) is inputs.catalog  # noqa: SLF001 - B+ catalog choice
+
+
+@pytest.mark.parametrize("per_label", [0, 36])
+def test_jev_catalog_rejects_out_of_range_example_counts(per_label: int) -> None:
+    inputs = BenchmarkInputs(make_catalog(), [], [], 0)
+
+    with pytest.raises(ConfigurationError, match="1 to 35"):
+        cli._jev_catalog(inputs, per_label)  # noqa: SLF001 - B+ catalog choice

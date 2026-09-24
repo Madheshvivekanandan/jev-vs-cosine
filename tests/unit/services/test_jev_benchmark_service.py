@@ -95,7 +95,7 @@ def test_run_keeps_earlier_answers_when_jev_becomes_unavailable(
 
 def test_estimate_counts_only_uncached_messages(tmp_path: Path, catalog: IntentCatalog) -> None:
     test_set = make_messages("alpha_intent", 3)
-    service, _cache, _budget = _service(tmp_path, KeywordDecider(input_tokens=200))
+    service, _cache, _budget = _service(tmp_path, KeywordDecider(input_tokens=2000))
     service.run(catalog, test_set[:1], route_id="host/m")
 
     estimate = service.estimate(
@@ -103,7 +103,7 @@ def test_estimate_counts_only_uncached_messages(tmp_path: Path, catalog: IntentC
     )
 
     assert (estimate.cached_messages, estimate.uncached_messages) == (1, 2)
-    assert estimate.estimated_tokens == 2 * 220  # observed average plus a 10% margin
+    assert estimate.estimated_tokens == 2 * 2200  # observed average plus a 10% margin
     assert estimate.fits_budget
 
 
@@ -149,3 +149,20 @@ def test_missing_usage_is_charged_as_the_estimate_in_predictions(
 
     assert predictions[0].input_tokens == budget.spent_tokens > 0
     assert cache.total_input_tokens() == budget.spent_tokens
+
+
+def test_estimate_uses_catalog_size_when_it_exceeds_the_observed_average(
+    tmp_path: Path, catalog: IntentCatalog
+) -> None:
+    service, _cache, _budget = _service(tmp_path, KeywordDecider(input_tokens=10))
+    service.run(catalog, make_messages("alpha_intent", 1), route_id="host/m")
+    big = IntentCatalog(version="big", instructions="q", descriptions={"alpha_intent": "x" * 4000})
+
+    estimate = service.estimate(
+        big,
+        make_messages("alpha_intent", 1),
+        route_id="host/m",
+        price_usd_per_million_tokens=Decimal(0),
+    )
+
+    assert estimate.estimated_tokens > 1000
