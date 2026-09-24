@@ -6,7 +6,8 @@ comparing [TypeSafe AI's Jev](https://typesafe.ai/blog/introducing-system-one-mo
 against plain embedding cosine similarity, on the
 [Banking77](https://github.com/PolyAI-LDN/task-specific-datasets) intent-routing dataset.
 
-It runs at **$0**: the cosine methods run locally, and Jev is called through a free route.
+It runs at **$0**: cosine similarity and a cross-encoder run locally, and Jev is called
+through a free route.
 
 ## Results so far
 
@@ -20,25 +21,31 @@ requests per IP per day, so the run resumes each day. Scored on those same 249 m
 - **With about 10 labelled examples per category, free local cosine catches up** (86.6%), and at
   35 it reaches 92.9%.
 - **One example per category (64%) does worse than a one-line description (72%).**
+- **A cross-encoder reranker doesn't close the gap.** `bge-reranker-v2-m3` reads each message
+  together with each description, much as Jev reads a message with its options, yet it scores
+  70.7% (71.1% on all 1,001 messages, against 73.2% for cosine). That is no better than plain
+  cosine and 12 points below Jev, at the same ~0.8 s per message (on a laptop CPU).
 
-The cosine methods on all 1,001 messages are in [`results/REPORT.md`](results/REPORT.md).
+The cosine and cross-encoder methods on all 1,001 messages are in [`results/REPORT.md`](results/REPORT.md).
 These numbers are preliminary until Jev finishes the full sample.
 
 ## The question, in plain English
 
 A bank's support inbox gets a message like *"I paid at the supermarket and it said
 transaction refused."* Which of 77 categories is it (`declined_card_payment`,
-`card_arrival`, ...)? Three ways to answer:
+`card_arrival`, ...)? Four ways to answer:
 
 | Method | What it compares the message against | Past examples used |
 |---|---|---|
 | **A: cosine vs descriptions** | A one-line description of each category, e.g. *"A card payment at a shop or online was declined"*. The closest one by meaning wins. | 0 |
 | **B: Jev** | The same 77 descriptions, sent to Jev as one `Choice` question. Jev reads the message and picks one. | 0 |
 | **C: cosine vs past examples** | Real past customer messages whose category is known. The 5 most similar ones vote. | 1, 5, 10, 20, 35 per category |
+| **D: cross-encoder vs descriptions** | The same 77 descriptions, but a reranker model ([`bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3)) reads the message and each description *together* and scores the pair. | 0 |
 
-A and B get the same category names and descriptions (Jev also receives a one-sentence
-instruction), so the difference comes from the method. C shows how many labelled examples
-a free, local approach needs before it matches Jev.
+A, B and D get the same category names and descriptions (Jev also receives a one-sentence
+instruction), so the difference comes from the method. A encodes the message and each
+description *separately*, while D and Jev read them *together*. C shows how many labelled
+examples a free, local approach needs before it matches Jev.
 
 ## Quickstart
 
@@ -50,6 +57,7 @@ cp .env.example .env               # the default block is the free Jev route
 
 .venv/bin/python -m app.main download       # Banking77, pinned commit + SHA-256 checked
 .venv/bin/python -m app.main run-cosine     # methods A and C, local and free (~1 min)
+.venv/bin/python -m app.main run-cross-encoder   # method D, local and free (~15 min, 2.3 GB model)
 .venv/bin/python -m app.main run-jev --limit 20 --dry-run   # estimate, calls nothing
 .venv/bin/python -m app.main run-jev --limit 20             # pilot
 .venv/bin/python -m app.main run-jev                        # all 1,001 test messages
@@ -87,12 +95,14 @@ against an allow-list so a key can't be sent to a typo or a reseller.
   the 10 used at 10-per-category, so the curve measures *more* examples, not *different*
   ones. Every size is drawn with 3 random seeds, and the chart shows the range. The grid
   stops at 35 because the smallest Banking77 training category has 35 messages.
-- **Everything pinned:** the dataset commit plus file checksums, the embedding model revision
-  (`BAAI/bge-small-en-v1.5@5c38ec7`), the prompt version, and the Jev route. Each run saves
+- **Everything pinned:** the dataset commit plus file checksums, the embedding and reranker
+  model revisions (`BAAI/bge-small-en-v1.5@5c38ec7`, `BAAI/bge-reranker-v2-m3@953dc6f`), the
+  prompt version, and the Jev route. Each run saves
   its route, the model the route reported, the prompt version and the price next to its
   results (`*.meta.json`), and the report reads them from there, not from your current `.env`.
 - **Latency:** A and C time local CPU embedding plus scoring per message. Reference texts are
-  pre-embedded, as a live system would do. Jev time is the full network round trip from
+  pre-embedded, as a live system would do. D times all 77 (message, description) pairs for
+  one message on CPU; nothing can be precomputed, because each pair includes the message. Jev time is the full network round trip from
   wherever you run it, including any retry waits on routes with retries enabled (the
   default free route has them off).
 
@@ -112,12 +122,12 @@ against an allow-list so a key can't be sent to a typo or a reseller.
 ```
 app/
   domain/        pure types and scoring (stdlib only): metrics, catalog, results
-  services/      use cases: sampling, cosine voting, Jev runner, budget, report, chart
-  services/ports Protocols the services depend on (Embedder, JevDecider)
+  services/      use cases: sampling, cosine voting, cross-encoder, Jev runner, budget, report
+  services/ports Protocols the services depend on (Embedder, PairScorer, JevDecider)
   repositories/  dataset files, prompt catalog, Jev answer cache, results
-  clients/       adapters: TypeSafe SDK, sentence-transformers
+  clients/       adapters: TypeSafe SDK, sentence-transformers embedder and cross-encoder
   core/          settings, logging, run id
-  main.py        CLI: download | run-cosine | run-jev | report
+  main.py        CLI: download | run-cosine | run-cross-encoder | run-jev | report
 prompts/         versioned category descriptions (the "prompt")
 results/         committed outputs: REPORT.md, chart, per-message predictions
 tests/unit/      pytest suite mirroring app/
@@ -145,6 +155,9 @@ each method's answers, for error analysis.
 - One dataset (English banking intents, mostly topic-like categories, where cosine is
   strong). Judgement-heavy tasks may look very different.
 - One embedding model (`bge-small`, chosen for speed on a laptop). Larger ones may score higher.
+- One cross-encoder (`bge-reranker-v2-m3`, trained for search relevance, not classification).
+  A 2026 zero-shot benchmark ([BTZSC](https://arxiv.org/abs/2603.11991)) found larger rerankers
+  such as Qwen3-Reranker-8B do much better, so D is a lower bound for the approach.
 - Jev results come from a free route. If you change the route, compare within one route,
   not across routes.
 - Jev latency depends heavily on distance to its US-hosted servers.
