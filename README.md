@@ -18,8 +18,9 @@ requests per IP per day, so the run resumes each day. Scored on those same 249 m
 ![Accuracy vs past examples per category, first 249 messages](results/first_249/accuracy_vs_examples.png)
 
 - **With no examples, Jev (83.1%) beats cosine-vs-descriptions (72.3%) by about 11 points.**
-- **With about 10 labelled examples per category, free local cosine catches up** (86.6%), and at
-  35 it reaches 92.9%.
+- **With just 5 labelled examples per category, a free logistic-regression classifier matches
+  Jev** (method E, about 84%). Plain cosine voting (method C) needs about 10 (86.6%). Both reach
+  92-93% with 35.
 - **One example per category (64%) does worse than a one-line description (72%).**
 - **A cross-encoder reranker doesn't close the gap.** `bge-reranker-v2-m3` reads each message
   together with each description, much as Jev reads a message with its options, yet it scores
@@ -33,13 +34,14 @@ These numbers are preliminary until Jev finishes the full sample.
 
 A bank's support inbox gets a message like *"I paid at the supermarket and it said
 transaction refused."* Which of 77 categories is it (`declined_card_payment`,
-`card_arrival`, ...)? Four ways to answer:
+`card_arrival`, ...)? Five ways to answer:
 
 | Method | What it compares the message against | Past examples used |
 |---|---|---|
 | **A: cosine vs descriptions** | A one-line description of each category, e.g. *"A card payment at a shop or online was declined"*. The closest one by meaning wins. | 0 |
 | **B: Jev** | The same 77 descriptions, sent to Jev as one `Choice` question. Jev reads the message and picks one. | 0 |
 | **C: cosine vs past examples** | Real past customer messages whose category is known. The 5 most similar ones vote. | 1, 5, 10, 20, 35 per category |
+| **E: classifier on past examples** | The same past examples as C, used to train a logistic-regression classifier on their embeddings. | 1, 5, 10, 20, 35 per category |
 | **D: cross-encoder vs descriptions** | The same 77 descriptions, but a reranker model ([`bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3)) reads the message and each description *together* and scores the pair. | 0 |
 
 A, B and D get the same category names and descriptions (Jev also receives a one-sentence
@@ -58,6 +60,7 @@ cp .env.example .env               # the default block is the free Jev route
 .venv/bin/python -m app.main download       # Banking77, pinned commit + SHA-256 checked
 .venv/bin/python -m app.main run-cosine     # methods A and C, local and free (~1 min)
 .venv/bin/python -m app.main run-cross-encoder   # method D, local and free (~15 min, 2.3 GB model)
+.venv/bin/python -m app.main run-trained    # method E, local and free (~30 s)
 .venv/bin/python -m app.main run-jev --limit 20 --dry-run   # estimate, calls nothing
 .venv/bin/python -m app.main run-jev --limit 20             # pilot
 .venv/bin/python -m app.main run-jev                        # all 1,001 test messages
@@ -89,6 +92,9 @@ against an allow-list so a key can't be sent to a typo or a reseller.
   A embeds "name: description". Jev gets the same names and descriptions as `Choice` options,
   plus the file's one-sentence instruction. The descriptions were written from the category
   names only, without looking at any test message.
+- **Tuned only on training data:** method E's regularisation (`C=100`) was chosen on 1,500
+  held-out *training* messages, never on the test set. The scikit-learn default `C=1` underfit
+  by 2-4 points there.
 - **No train/test leaks:** 7 training rows that duplicate a test message (ignoring case and
   whitespace, an upstream Banking77 quirk) are removed before any past examples are drawn.
 - **Nested, repeated examples for C:** the 5 examples used at 5-per-category are also among
@@ -122,12 +128,13 @@ against an allow-list so a key can't be sent to a typo or a reseller.
 ```
 app/
   domain/        pure types and scoring (stdlib only): metrics, catalog, results
-  services/      use cases: sampling, cosine voting, cross-encoder, Jev runner, budget, report
-  services/ports Protocols the services depend on (Embedder, PairScorer, JevDecider)
+  services/      use cases: sampling, cosine voting, cross-encoder, trained classifier, Jev
+                 runner, budget, report, chart
+  services/ports Protocols (Embedder, PairScorer, ClassifierTrainer, JevDecider)
   repositories/  dataset files, prompt catalog, Jev answer cache, results
-  clients/       adapters: TypeSafe SDK, sentence-transformers embedder and cross-encoder
+  clients/       adapters: TypeSafe SDK, sentence-transformers, scikit-learn
   core/          settings, logging, run id
-  main.py        CLI: download | run-cosine | run-cross-encoder | run-jev | report
+  main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev | report
 prompts/         versioned category descriptions (the "prompt")
 results/         committed outputs: REPORT.md, chart, per-message predictions
 tests/unit/      pytest suite mirroring app/

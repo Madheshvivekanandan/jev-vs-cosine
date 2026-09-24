@@ -13,6 +13,7 @@ dependencies = [
     "numpy==2.5.3",                 # vector maths for cosine similarity
     "matplotlib==3.11.2",           # the accuracy-vs-examples chart
     "pydantic-settings==2.15.0",    # typed settings; keeps the API key in a SecretStr
+    "scikit-learn==1.9.1",          # method E's logistic regression
 ]
 
 [project.optional-dependencies]
@@ -45,6 +46,12 @@ max-complexity = 8
 [tool.mypy]
 strict = true
 python_version = "3.12"
+
+# scikit-learn ships no type information. Only app/clients/logistic_regression_trainer.py
+# imports it, behind the typed ClassifierTrainer port.
+[[tool.mypy.overrides]]
+module = ["sklearn", "sklearn.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
