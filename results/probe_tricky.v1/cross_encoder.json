@@ -1,0 +1,16 @@
+[
+  {
+    "accuracy": 0.7904761904761904,
+    "accuracy_ci_high": 0.8573655003616167,
+    "accuracy_ci_low": 0.7030819756034554,
+    "correct": 83,
+    "examples_per_label": 0,
+    "input_tokens": 0,
+    "list_price_cost_usd": "0",
+    "median_latency_ms": 1115.4880829853937,
+    "method": "D_cross_encoder_descriptions",
+    "p95_latency_ms": 1213.2582500344142,
+    "seed": null,
+    "total": 105
+  }
+]
