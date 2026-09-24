@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 
 from app.domain.benchmark_method import BenchmarkMethod
+from app.domain.benchmark_results import BenchmarkResults
 from app.domain.method_result import MethodResult
 from app.domain.report_context import ReportContext
 from app.domain.seed_aggregate import SeedAggregate, aggregate_across_seeds
@@ -15,16 +16,11 @@ _HEADER = (
 )
 
 
-def build_markdown_report(
-    cosine_results: Sequence[MethodResult],
-    jev_result: MethodResult | None,
-    context: ReportContext,
-    *,
-    cross_encoder_result: MethodResult | None = None,
-) -> str:
+def build_markdown_report(results: BenchmarkResults, context: ReportContext) -> str:
     """Return the full REPORT.md text: headline, chart, table and how to read it."""
-    description = _only(cosine_results, BenchmarkMethod.COSINE_DESCRIPTIONS)
-    examples = [r for r in cosine_results if r.method is BenchmarkMethod.COSINE_EXAMPLES]
+    jev_result, cross_encoder_result = results.jev, results.cross_encoder
+    description = _only(results.cosine, BenchmarkMethod.COSINE_DESCRIPTIONS)
+    examples = [r for r in results.cosine if r.method is BenchmarkMethod.COSINE_EXAMPLES]
     aggregates = aggregate_across_seeds(examples)
     rows = [_result_row("A · cosine vs descriptions", description)]
     if jev_result is not None:
