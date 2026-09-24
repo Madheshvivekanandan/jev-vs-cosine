@@ -15,6 +15,7 @@ from app.domain.method_run import MethodRun
 from app.domain.metrics import summarize
 from app.domain.prediction import Prediction
 from app.services.cosine_classifier import cosine_similarities, vote_top_k
+from app.services.embedded_messages import EmbeddedMessages, embed_one_at_a_time
 from app.services.ports.embedder import Embedder
 from app.services.sampling import draw_example_pools, take_examples
 from app.services.vector_types import FloatMatrix
@@ -22,15 +23,6 @@ from app.services.vector_types import FloatMatrix
 logger = logging.getLogger(__name__)
 
 _FREE = Decimal(0)
-
-
-@dataclass(frozen=True, slots=True)
-class _EmbeddedTestSet:
-    """Test messages with their embeddings and the time each embedding took."""
-
-    messages: Sequence[LabeledMessage]
-    vectors: FloatMatrix
-    embed_latencies_ms: Sequence[float]
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,24 +64,15 @@ class CosineBenchmarkService:
         Raises:
             DatasetError: If a training label has too few examples for the design.
         """
-        embedded = self._embed_test_set(test_set)
+        embedded = embed_one_at_a_time(self._embedder, test_set, self._clock)
         runs = [self._run_against_descriptions(catalog, embedded)]
         for seed in self._design.example_pool_seeds:
             runs.extend(self._run_against_examples(train_set, embedded, seed))
         logger.info("cosine_runs_complete", extra={"runs": len(runs)})
         return runs
 
-    def _embed_test_set(self, test_set: Sequence[LabeledMessage]) -> _EmbeddedTestSet:
-        rows: list[FloatMatrix] = []
-        latencies_ms: list[float] = []
-        for message in test_set:
-            started = self._clock()
-            rows.append(self._embedder.embed([message.text]))
-            latencies_ms.append((self._clock() - started) * 1000)
-        return _EmbeddedTestSet(test_set, np.vstack(rows).astype(np.float32), latencies_ms)
-
     def _run_against_descriptions(
-        self, catalog: IntentCatalog, embedded: _EmbeddedTestSet
+        self, catalog: IntentCatalog, embedded: EmbeddedMessages
     ) -> MethodRun:
         labels = list(catalog.labels)
         vectors = self._embedder.embed([catalog.embedding_text(label) for label in labels])
@@ -99,7 +82,7 @@ class CosineBenchmarkService:
         return self._classify(embedded, references)
 
     def _run_against_examples(
-        self, train_set: Sequence[LabeledMessage], embedded: _EmbeddedTestSet, seed: int
+        self, train_set: Sequence[LabeledMessage], embedded: EmbeddedMessages, seed: int
     ) -> list[MethodRun]:
         largest = self._design.max_examples_per_label
         pools = draw_example_pools(train_set, max_per_label=largest, seed=seed)
@@ -121,7 +104,7 @@ class CosineBenchmarkService:
             runs.append(self._classify(embedded, references))
         return runs
 
-    def _classify(self, embedded: _EmbeddedTestSet, references: _ReferenceSet) -> MethodRun:
+    def _classify(self, embedded: EmbeddedMessages, references: _ReferenceSet) -> MethodRun:
         started = self._clock()
         similarities = cosine_similarities(embedded.vectors, references.vectors)
         guesses = vote_top_k(similarities, references.labels, k=references.top_k)
