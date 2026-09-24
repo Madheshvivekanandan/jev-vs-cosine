@@ -10,9 +10,11 @@ from app.domain.method_result import MethodResult
 class BenchmarkResults:
     """All results for one test sample. Methods not run yet are None or empty.
 
-    `cosine` holds method A plus every method C run, as `run-cosine` saves them.
+    `cosine` holds method A plus every method C run, as `run-cosine` saves them, and
+    `trained` holds every method E run.
     """
 
     cosine: Sequence[MethodResult]
     jev: MethodResult | None = None
     cross_encoder: MethodResult | None = None
+    trained: Sequence[MethodResult] = ()
