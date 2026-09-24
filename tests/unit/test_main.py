@@ -127,3 +127,21 @@ def test_build_parser_has_trained_classifier_command() -> None:
     arguments = cli.build_parser().parse_args(["run-trained"])
 
     assert (arguments.command, arguments.limit) == ("run-trained", None)
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected"),
+    [
+        (["report"], "results"),
+        (["report", "--limit", "249"], "results/first_249"),
+        (["report", "--probe", "tricky.v1"], "results/probe_tricky.v1"),
+        (["report", "--probe", "tricky.v1", "--limit", "5"], "results/probe_tricky.v1/first_5"),
+    ],
+)
+def test_results_for_keeps_each_experiment_in_its_own_folder(
+    argv: list[str], expected: str
+) -> None:
+    settings = BenchmarkSettings(_env_file=None, results_dir=Path("results"))  # type: ignore[call-arg]  # pydantic-settings init kwarg
+    repository = cli._results_for(settings, cli.build_parser().parse_args(argv))  # noqa: SLF001 - folder layout is the contract
+
+    assert repository.path_for("x.json").parent == Path(expected).resolve()

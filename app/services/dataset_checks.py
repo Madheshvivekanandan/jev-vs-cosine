@@ -26,6 +26,19 @@ def ensure_catalog_matches_dataset(
         )
 
 
+def ensure_labels_in_catalog(catalog: IntentCatalog, messages: Sequence[LabeledMessage]) -> None:
+    """Fail if any message is labelled with a category the catalog does not describe.
+
+    Probe sets cover a subset of categories, so this checks inclusion, not equality.
+
+    Raises:
+        ConfigurationError: If a label is missing from the catalog.
+    """
+    unknown = sorted({message.label for message in messages} - set(catalog.labels))
+    if unknown:
+        raise ConfigurationError(f"labels not in catalog {catalog.version}: {unknown}")
+
+
 def remove_test_duplicates(
     train_set: Sequence[LabeledMessage], test_set: Sequence[LabeledMessage]
 ) -> tuple[list[LabeledMessage], int]:

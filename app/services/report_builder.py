@@ -151,9 +151,7 @@ def _notes(test_messages: int, aggregates: Sequence[SeedAggregate], context: Rep
     lines = [
         "## How to read this",
         "",
-        f"- Every method answered the same {test_messages:,} test messages from the Banking77 "
-        "test split. The full sample is 13 per category x 77 categories = 1,001, shuffled; "
-        "a smaller count means the first N of that sample.",
+        _sample_note(test_messages, context.probe_name),
         "- A embeds each category's name plus its one-line description. B (Jev) gets the same "
         "names and descriptions as Choice options, plus a one-sentence instruction. C compares "
         f"against past customer messages from the training split ({grid} per category), "
@@ -179,6 +177,19 @@ def _notes(test_messages: int, aggregates: Sequence[SeedAggregate], context: Rep
             f"methods with `{context.catalog_version}`; the comparison is not like for like."
         )
     return "\n".join(lines)
+
+
+def _sample_note(test_messages: int, probe_name: str | None) -> str:
+    if probe_name is not None:
+        return (
+            f"- Every method answered the same {test_messages:,} messages of probe "
+            f"`{probe_name}`; `probes/README.md` explains how they were built and checked."
+        )
+    return (
+        f"- Every method answered the same {test_messages:,} test messages from the Banking77 "
+        "test split. The full sample is 13 per category x 77 categories = 1,001, shuffled; "
+        "a smaller count means the first N of that sample."
+    )
 
 
 def _only(results: Sequence[MethodResult], method: BenchmarkMethod) -> MethodResult:

@@ -1,3 +1,4 @@
+import dataclasses
 from decimal import Decimal
 from pathlib import Path
 
@@ -197,3 +198,12 @@ def test_render_chart_with_all_methods(tmp_path: Path, trained_end: float) -> No
     render_accuracy_chart(results, output)
 
     assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_report_for_a_probe_names_it_in_the_notes() -> None:
+    context = dataclasses.replace(_context(), probe_name="tricky.v1")
+
+    report = build_markdown_report(BenchmarkResults(_cosine_results(), jev=_jev()), context)
+
+    assert "messages of probe `tricky.v1`" in report
+    assert "13 per category" not in report
