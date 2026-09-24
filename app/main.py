@@ -42,6 +42,7 @@ from app.repositories.jev_decision_cache_repository import JevDecisionCacheRepos
 from app.repositories.probe_repository import ProbeRepository
 from app.repositories.results_repository import ResultsRepository
 from app.services.call_pacer import CallPacer
+from app.services.catalog_with_examples import catalog_with_examples
 from app.services.chart_service import CHART_FILENAME, render_accuracy_chart
 from app.services.cosine_benchmark_service import CosineBenchmarkService
 from app.services.cross_encoder_benchmark_service import CrossEncoderBenchmarkService
@@ -52,7 +53,7 @@ from app.services.dataset_checks import (
 )
 from app.services.jev_benchmark_service import JevBenchmarkService
 from app.services.report_builder import build_markdown_report
-from app.services.sampling import sample_test_set
+from app.services.sampling import draw_example_pools, sample_test_set
 from app.services.token_budget import TokenBudget
 from app.services.trained_classifier_benchmark_service import TrainedClassifierBenchmarkService
 from app.utils.printable_text import to_printable
@@ -78,6 +79,13 @@ def build_parser() -> argparse.ArgumentParser:
     cosine = commands.add_parser("run-cosine", help="run methods A and C locally (free, no key)")
     jev = commands.add_parser("run-jev", help="run method B (Jev) with cache and budget")
     jev.add_argument("--dry-run", action="store_true", help="estimate tokens; call nothing")
+    jev.add_argument(
+        "--examples-per-label",
+        type=int,
+        default=None,
+        help="method B+: add this many past examples per category to Jev's descriptions "
+        "(the same examples C and E use with seed 1)",
+    )
     cross = commands.add_parser(
         "run-cross-encoder", help="run method D (cross-encoder) locally (free, no key)"
     )
@@ -256,6 +264,7 @@ def _run_jev(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     route = settings.require_jev_route()
     inputs = _load_inputs(settings, arguments.probe)
     test_set = _apply_limit(inputs.test_set, arguments.limit)
+    catalog = _jev_catalog(inputs, arguments.examples_per_label)
     cache = JevDecisionCacheRepository(settings.cache_dir / "jev_decisions.jsonl")
     budget = TokenBudget(
         settings.jev_max_total_input_tokens, spent_tokens=cache.total_input_tokens()
@@ -272,13 +281,27 @@ def _run_jev(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
         decider = TypeSafeJevDecider(client, model=route.model)
         service = JevBenchmarkService(decider, cache, budget, pacer)
         if arguments.dry_run:
-            return _print_estimate(service, inputs.catalog, test_set, settings, route.route_id)
-        predictions = service.run(inputs.catalog, test_set, route_id=route.route_id)
-        served = service.served_models(inputs.catalog, test_set, route_id=route.route_id)
+            return _print_estimate(service, catalog, test_set, settings, route.route_id)
+        predictions = service.run(catalog, test_set, route_id=route.route_id)
+        served = service.served_models(catalog, test_set, route_id=route.route_id)
     results = _results_for(settings, arguments)
-    _save_jev_result(settings, predictions, budget, results)
-    results.save_metadata("jev", _jev_metadata(route, served, inputs.catalog, settings))
+    name = _save_jev_result(settings, predictions, budget, results, arguments.examples_per_label)
+    results.save_metadata(name, _jev_metadata(route, served, catalog, settings))
     return _EXIT_OK
+
+
+def _jev_catalog(inputs: BenchmarkInputs, examples_per_label: int | None) -> IntentCatalog:
+    if examples_per_label is None:
+        return inputs.catalog
+    if not 1 <= examples_per_label <= _DESIGN.max_examples_per_label:
+        raise ConfigurationError(
+            f"--examples-per-label must be 1 to {_DESIGN.max_examples_per_label}"
+        )
+    seed = _DESIGN.example_pool_seeds[0]
+    pools = draw_example_pools(
+        inputs.train_set, max_per_label=_DESIGN.max_examples_per_label, seed=seed
+    )
+    return catalog_with_examples(inputs.catalog, pools, per_label=examples_per_label, seed=seed)
 
 
 def _jev_metadata(
@@ -319,20 +342,24 @@ def _save_jev_result(
     predictions: Sequence[Prediction],
     budget: TokenBudget,
     results: ResultsRepository,
-) -> None:
+    examples_per_label: int | None,
+) -> str:
+    with_examples = examples_per_label is not None
     result = summarize(
-        BenchmarkMethod.JEV,
+        BenchmarkMethod.JEV_WITH_EXAMPLES if with_examples else BenchmarkMethod.JEV,
         predictions,
-        examples_per_label=0,
-        seed=None,
+        examples_per_label=examples_per_label or 0,
+        seed=_DESIGN.example_pool_seeds[0] if with_examples else None,
         price_usd_per_million_tokens=settings.jev_price_usd_per_million_input_tokens,
     )
-    results.save_runs("jev", [MethodRun(result, tuple(predictions))])
+    name = "jev_with_examples" if with_examples else "jev"
+    results.save_runs(name, [MethodRun(result, tuple(predictions))])
     print(
         f"Jev accuracy={result.accuracy:.1%} on {result.total} messages; "
         f"input tokens this result={result.input_tokens:,}; "
         f"total spent={budget.spent_tokens:,} of {settings.jev_max_total_input_tokens:,}"
     )
+    return name
 
 
 def _print_estimate(
@@ -378,6 +405,7 @@ def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
         jev=jev_result,
         cross_encoder=cross_result,
         trained=results.load_results("trained_classifier"),
+        jev_with_examples=next(iter(results.load_results("jev_with_examples")), None),
     )
     sample_label = f"Probe {arguments.probe}" if arguments.probe else "Banking77 intent routing"
     render_accuracy_chart(bundle, results.path_for(CHART_FILENAME), sample_label=sample_label)

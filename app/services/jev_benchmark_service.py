@@ -132,10 +132,9 @@ class JevBenchmarkService:
         return decision
 
     def _estimate_tokens(self, catalog: IntentCatalog, text: str) -> int:
-        observed = self._cache.average_input_tokens()
-        if observed is not None:
-            # Integer percent arithmetic: `observed * 1.1` gives 220.00000000000003 for 200.
-            return math.ceil(observed * (100 + _OBSERVED_MARGIN_PERCENT) / 100)
+        # The larger of the size-based guess and the observed average (+10%): the cache
+        # average comes from all past calls, so it underestimates a much larger catalog
+        # such as B+'s, while the size-based guess tracks the catalog actually sent.
         characters = (
             len(catalog.instructions)
             + len(text)
@@ -143,7 +142,12 @@ class JevBenchmarkService:
                 len(label) + len(description) for label, description in catalog.descriptions.items()
             )
         )
-        return _REQUEST_OVERHEAD_TOKENS + math.ceil(characters / _CHARS_PER_TOKEN)
+        size_based = _REQUEST_OVERHEAD_TOKENS + math.ceil(characters / _CHARS_PER_TOKEN)
+        observed = self._cache.average_input_tokens()
+        if observed is None:
+            return size_based
+        # Integer percent arithmetic: `observed * 1.1` gives 220.00000000000003 for 200.
+        return max(size_based, math.ceil(observed * (100 + _OBSERVED_MARGIN_PERCENT) / 100))
 
 
 def cache_key(route_id: str, catalog: IntentCatalog, text: str) -> str:
