@@ -16,29 +16,67 @@ _HEADER = (
 )
 
 
+_C_NAME = "C · cosine vs past examples (top-5 vote)"
+_E_NAME = "E · classifier trained on past examples"
+
+
 def build_markdown_report(results: BenchmarkResults, context: ReportContext) -> str:
     """Return the full REPORT.md text: headline, chart, table and how to read it."""
-    jev_result, cross_encoder_result = results.jev, results.cross_encoder
     description = _only(results.cosine, BenchmarkMethod.COSINE_DESCRIPTIONS)
     examples = [r for r in results.cosine if r.method is BenchmarkMethod.COSINE_EXAMPLES]
     aggregates = aggregate_across_seeds(examples)
-    rows = [_result_row("A · cosine vs descriptions", description)]
-    if jev_result is not None:
-        rows.append(_result_row("B · Jev", jev_result))
-    if cross_encoder_result is not None:
-        rows.append(_result_row("D · cross-encoder vs descriptions", cross_encoder_result))
-    rows.extend(_aggregate_row(aggregate, examples) for aggregate in aggregates)
-    headline = _headline(description, jev_result, aggregates)
-    if cross_encoder_result is not None:
-        headline += "\n\n" + _cross_encoder_line(description, jev_result, cross_encoder_result)
     sections = [
         "# Results: Jev vs cosine similarity on Banking77",
-        headline,
+        "\n\n".join(_headlines(results, description, aggregates)),
         f"![Accuracy vs past examples per category]({CHART_FILENAME})",
-        "\n".join([_HEADER, *rows]),
+        "\n".join([_HEADER, *_rows(results, description, examples)]),
         _notes(description.total, aggregates, context),
     ]
     return "\n\n".join(sections) + "\n"
+
+
+def _rows(
+    results: BenchmarkResults, description: MethodResult, examples: Sequence[MethodResult]
+) -> list[str]:
+    rows = [_result_row("A · cosine vs descriptions", description)]
+    if results.jev is not None:
+        rows.append(_result_row("B · Jev", results.jev))
+    if results.cross_encoder is not None:
+        rows.append(_result_row("D · cross-encoder vs descriptions", results.cross_encoder))
+    rows.extend(_aggregate_row(_C_NAME, a, examples) for a in aggregate_across_seeds(examples))
+    trained = list(results.trained)
+    rows.extend(_aggregate_row(_E_NAME, a, trained) for a in aggregate_across_seeds(trained))
+    return rows
+
+
+def _headlines(
+    results: BenchmarkResults, description: MethodResult, aggregates: Sequence[SeedAggregate]
+) -> list[str]:
+    lines = [_headline(description, results.jev, aggregates)]
+    if results.trained:
+        lines.append(_trained_line(results.jev, aggregate_across_seeds(results.trained)))
+    if results.cross_encoder is not None:
+        lines.append(_cross_encoder_line(description, results.jev, results.cross_encoder))
+    return lines
+
+
+def _trained_line(jev_result: MethodResult | None, trained: Sequence[SeedAggregate]) -> str:
+    best = trained[-1]
+    if jev_result is None:
+        return (
+            f"A classifier trained on the same past examples (method E) reaches "
+            f"**{best.mean_accuracy:.1%}** with {best.examples_per_label} per category."
+        )
+    crossover = find_crossover(trained, jev_result.accuracy)
+    reach = (
+        f"reaches Jev at **{crossover} examples per category**"
+        if crossover is not None
+        else "does not reach Jev within the tested range"
+    )
+    return (
+        f"A classifier trained on the same past examples (method E) {reach}, and scores "
+        f"{best.mean_accuracy:.1%} with {best.examples_per_label} per category."
+    )
 
 
 def _cross_encoder_line(
@@ -55,7 +93,7 @@ def _cross_encoder_line(
 
 
 def find_crossover(aggregates: Sequence[SeedAggregate], jev_accuracy: float) -> int | None:
-    """Return the first tested examples-per-category whose method C mean reaches Jev."""
+    """Return the first tested examples-per-category whose mean accuracy reaches Jev."""
     return next((a.examples_per_label for a in aggregates if a.mean_accuracy >= jev_accuracy), None)
 
 
@@ -90,7 +128,7 @@ def _result_row(name: str, result: MethodResult) -> str:
     )
 
 
-def _aggregate_row(aggregate: SeedAggregate, examples: Sequence[MethodResult]) -> str:
+def _aggregate_row(name: str, aggregate: SeedAggregate, examples: Sequence[MethodResult]) -> str:
     same_setting = [r for r in examples if r.examples_per_label == aggregate.examples_per_label]
     median_ms = sum(r.median_latency_ms for r in same_setting) / len(same_setting)
     p95_ms = sum(r.p95_latency_ms for r in same_setting) / len(same_setting)
@@ -99,7 +137,7 @@ def _aggregate_row(aggregate: SeedAggregate, examples: Sequence[MethodResult]) -
         f"{aggregate.max_accuracy:.1%} over {aggregate.run_count} draws)"
     )
     return (
-        f"| C · cosine vs past examples (top-5 vote) | {aggregate.examples_per_label} | "
+        f"| {name} | {aggregate.examples_per_label} | "
         f"{accuracy} | {median_ms:.0f} ms | {p95_ms:.0f} ms | 0 | $0.0000 |"
     )
 
@@ -127,6 +165,8 @@ def _notes(test_messages: int, aggregates: Sequence[SeedAggregate], context: Rep
         "- D scores (message, name + description) for every category with a cross-encoder "
         f"reranker (`{context.cross_encoder_model or 'not run'}`), 77 pairs per message, locally "
         "on CPU, with no examples. Its latency is all 77 pairs for one message.",
+        "- E trains a logistic-regression classifier on the embeddings of the same past "
+        "examples C votes with (same seeds, same messages). Training is offline and untimed.",
         "- Latency for A and C is local embedding plus scoring per message. For Jev it is the "
         "full network round trip, including retry waits on routes with retries enabled.",
         "- List-price cost is what the run would cost at "

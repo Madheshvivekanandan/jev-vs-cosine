@@ -15,6 +15,7 @@ from typing import Final
 from pydantic import ValidationError
 
 from app.clients.cross_encoder_scorer import load_cross_encoder_scorer
+from app.clients.logistic_regression_trainer import LogisticRegressionTrainer
 from app.clients.sentence_transformer_embedder import load_sentence_transformer_embedder
 from app.clients.typesafe_jev_decider import TypeSafeJevDecider, create_typesafe_client
 from app.core.jev_route import JevRoute
@@ -48,6 +49,7 @@ from app.services.jev_benchmark_service import JevBenchmarkService
 from app.services.report_builder import build_markdown_report
 from app.services.sampling import sample_test_set
 from app.services.token_budget import TokenBudget
+from app.services.trained_classifier_benchmark_service import TrainedClassifierBenchmarkService
 from app.utils.printable_text import to_printable
 
 logger = logging.getLogger(__name__)
@@ -74,8 +76,11 @@ def build_parser() -> argparse.ArgumentParser:
     cross = commands.add_parser(
         "run-cross-encoder", help="run method D (cross-encoder) locally (free, no key)"
     )
+    trained = commands.add_parser(
+        "run-trained", help="run method E (classifier trained on past examples) locally"
+    )
     report = commands.add_parser("report", help="write REPORT.md and the chart")
-    for command in (cosine, jev, cross, report):
+    for command in (cosine, jev, cross, trained, report):
         command.add_argument(
             "--limit",
             type=int,
@@ -170,6 +175,7 @@ def _run_cosine(settings: BenchmarkSettings, arguments: argparse.Namespace) -> i
 
 
 def _print_cosine_summary(runs: Sequence[MethodRun]) -> None:
+    # Also used by run-trained: one line per (method, examples per label, seed).
     for run in runs:
         result = run.result
         seed = f" seed {result.seed}" if result.seed is not None else ""
@@ -203,6 +209,31 @@ def _run_cross_encoder(settings: BenchmarkSettings, arguments: argparse.Namespac
         f"{run.result.method.value} accuracy={run.result.accuracy:.1%}; "
         f"median {run.result.median_latency_ms:.0f} ms per message"
     )
+    print(f"saved {path}")
+    return _EXIT_OK
+
+
+def _run_trained(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
+    inputs = _load_inputs(settings)
+    test_set = _apply_limit(inputs.test_set, arguments.limit)
+    embedder = load_sentence_transformer_embedder(
+        settings.embedding_model_name, settings.embedding_model_revision
+    )
+    service = TrainedClassifierBenchmarkService(
+        embedder, LogisticRegressionTrainer(), _DESIGN, clock=time.perf_counter
+    )
+    runs = service.run(test_set, inputs.train_set)
+    results = _results_for(settings, arguments.limit)
+    path = results.save_runs("trained_classifier", runs)
+    results.save_metadata(
+        "trained_classifier",
+        {
+            "classifier": "scikit-learn LogisticRegression(C=100, max_iter=5000)",
+            "embedding_model": f"{settings.embedding_model_name}@{settings.embedding_model_revision}",
+            "train_duplicates_removed": str(inputs.train_duplicates_removed),
+        },
+    )
+    _print_cosine_summary(runs)
     print(f"saved {path}")
     return _EXIT_OK
 
@@ -324,7 +355,12 @@ def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     if cross_result is not None:
         cross_model = results.load_metadata("cross_encoder").get("cross_encoder_model")
         context = dataclasses.replace(context, cross_encoder_model=cross_model or "unknown")
-    bundle = BenchmarkResults(cosine=cosine_results, jev=jev_result, cross_encoder=cross_result)
+    bundle = BenchmarkResults(
+        cosine=cosine_results,
+        jev=jev_result,
+        cross_encoder=cross_result,
+        trained=results.load_results("trained_classifier"),
+    )
     render_accuracy_chart(bundle, results.path_for(CHART_FILENAME))
     report = build_markdown_report(bundle, context)
     print(f"wrote {results.write_text('REPORT.md', report)}")
@@ -360,6 +396,7 @@ _COMMANDS: Final[dict[str, Command]] = {
     "run-cosine": _run_cosine,
     "run-jev": _run_jev,
     "run-cross-encoder": _run_cross_encoder,
+    "run-trained": _run_trained,
     "report": _report,
 }
 

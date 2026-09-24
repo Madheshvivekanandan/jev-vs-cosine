@@ -154,3 +154,46 @@ def test_render_accuracy_chart_with_cross_encoder_above_or_below_a(
     )
 
     assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def _trained(examples_per_label: int, accuracy: float) -> MethodResult:
+    return make_result(
+        BenchmarkMethod.TRAINED_CLASSIFIER,
+        examples_per_label=examples_per_label,
+        seed=1,
+        accuracy=accuracy,
+    )
+
+
+def test_report_with_trained_classifier_rows_and_crossover() -> None:
+    trained = [_trained(5, 0.86), _trained(20, 0.92)]
+    report = build_markdown_report(
+        BenchmarkResults(_cosine_results(), jev=_jev(0.85), trained=trained), _context()
+    )
+
+    assert "| E · classifier trained on past examples | 5 |" in report
+    assert "reaches Jev at **5 examples per category**" in report
+
+
+def test_report_with_trained_classifier_but_no_jev() -> None:
+    report = build_markdown_report(
+        BenchmarkResults(_cosine_results(), trained=[_trained(5, 0.8), _trained(20, 0.9)]),
+        _context(jev_route=None, jev_catalog=None),
+    )
+
+    assert "reaches **90.0%** with 20 per category" in report
+
+
+@pytest.mark.parametrize("trained_end", [0.9, 0.95])
+def test_render_chart_with_all_methods(tmp_path: Path, trained_end: float) -> None:
+    output = tmp_path / "chart.png"
+    results = BenchmarkResults(
+        _cosine_results(),
+        jev=_jev(),
+        cross_encoder=_cross(0.7),
+        trained=[_trained(5, 0.8), _trained(20, trained_end)],
+    )
+
+    render_accuracy_chart(results, output)
+
+    assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
