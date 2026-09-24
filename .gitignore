@@ -13,9 +13,12 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Downloaded dataset and Jev response cache (re-creatable)
+# Downloaded dataset (re-creatable from the pinned commit)
 data/
-.cache/
+
+# Local caches, except Jev's answers: each one spends free daily quota to recreate.
+.cache/*
+!.cache/jev_decisions.jsonl
 
 # Claude Code per-user settings
 .claude/settings.local.json
