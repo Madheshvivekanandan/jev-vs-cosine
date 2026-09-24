@@ -24,6 +24,7 @@ from app.core.secret_redacting_filter import mask_secrets
 from app.core.settings import BenchmarkSettings
 from app.domain.benchmark_inputs import BenchmarkInputs
 from app.domain.benchmark_method import BenchmarkMethod
+from app.domain.benchmark_results import BenchmarkResults
 from app.domain.dataset_split import DatasetSplit
 from app.domain.errors.app_error import AppError
 from app.domain.errors.configuration_error import ConfigurationError
@@ -323,15 +324,9 @@ def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     if cross_result is not None:
         cross_model = results.load_metadata("cross_encoder").get("cross_encoder_model")
         context = dataclasses.replace(context, cross_encoder_model=cross_model or "unknown")
-    render_accuracy_chart(
-        cosine_results,
-        jev_result,
-        results.path_for(CHART_FILENAME),
-        cross_encoder_result=cross_result,
-    )
-    report = build_markdown_report(
-        cosine_results, jev_result, context, cross_encoder_result=cross_result
-    )
+    bundle = BenchmarkResults(cosine=cosine_results, jev=jev_result, cross_encoder=cross_result)
+    render_accuracy_chart(bundle, results.path_for(CHART_FILENAME))
+    report = build_markdown_report(bundle, context)
     print(f"wrote {results.write_text('REPORT.md', report)}")
     return _EXIT_OK
 

@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from app.domain.benchmark_method import BenchmarkMethod
+from app.domain.benchmark_results import BenchmarkResults
 from app.domain.method_result import MethodResult
 from app.domain.report_context import ReportContext
 from app.domain.seed_aggregate import aggregate_across_seeds
@@ -50,7 +51,7 @@ def test_find_crossover_returns_first_setting_that_matches_jev() -> None:
 
 
 def test_report_with_jev_states_gap_and_crossover() -> None:
-    report = build_markdown_report(_cosine_results(), _jev(), _context())
+    report = build_markdown_report(BenchmarkResults(_cosine_results(), jev=_jev()), _context())
 
     assert "Jev leads cosine by 15.0 points" in report
     assert "reaches Jev is 20 examples per category" in report
@@ -59,7 +60,7 @@ def test_report_with_jev_states_gap_and_crossover() -> None:
 
 
 def test_report_when_jev_is_below_method_a_does_not_claim_a_catch_up() -> None:
-    report = build_markdown_report(_cosine_results(), _jev(0.65), _context())
+    report = build_markdown_report(BenchmarkResults(_cosine_results(), jev=_jev(0.65)), _context())
 
     assert "already matches or beats Jev (70.0% vs 65.0%)" in report
     assert "reaches Jev" not in report
@@ -67,7 +68,7 @@ def test_report_when_jev_is_below_method_a_does_not_claim_a_catch_up() -> None:
 
 def test_report_without_jev_says_so() -> None:
     report = build_markdown_report(
-        _cosine_results(), None, _context(jev_route=None, jev_catalog=None)
+        BenchmarkResults(_cosine_results(), jev=None), _context(jev_route=None, jev_catalog=None)
     )
 
     assert "has not been run yet" in report
@@ -76,13 +77,13 @@ def test_report_without_jev_says_so() -> None:
 
 
 def test_report_when_jev_never_catches_up() -> None:
-    report = build_markdown_report(_cosine_results(), _jev(0.99), _context())
+    report = build_markdown_report(BenchmarkResults(_cosine_results(), jev=_jev(0.99)), _context())
 
     assert "does not reach Jev within the tested range" in report
 
 
 def test_report_notes_come_from_the_saved_context() -> None:
-    report = build_markdown_report(_cosine_results(), _jev(), _context())
+    report = build_markdown_report(BenchmarkResults(_cosine_results(), jev=_jev()), _context())
 
     assert "`cat.v1`" in report
     assert "opencode.ai/jev-1.13-free" in report
@@ -92,21 +93,25 @@ def test_report_notes_come_from_the_saved_context() -> None:
 
 
 def test_report_warns_when_jev_and_cosine_used_different_catalogs() -> None:
-    report = build_markdown_report(_cosine_results(), _jev(), _context(jev_catalog="cat.v2"))
+    report = build_markdown_report(
+        BenchmarkResults(_cosine_results(), jev=_jev()), _context(jev_catalog="cat.v2")
+    )
 
     assert "not like for like" in report
 
 
 def test_report_without_method_a_raises() -> None:
     with pytest.raises(ValueError, match="exactly one"):
-        build_markdown_report(_cosine_results()[1:], None, _context())
+        build_markdown_report(BenchmarkResults(_cosine_results()[1:], jev=None), _context())
 
 
 @pytest.mark.parametrize("with_jev", [True, False])
 def test_render_accuracy_chart_writes_png(tmp_path: Path, *, with_jev: bool) -> None:
     output = tmp_path / "chart.png"
 
-    render_accuracy_chart(_cosine_results(), _jev() if with_jev else None, output)
+    render_accuracy_chart(
+        BenchmarkResults(_cosine_results(), jev=_jev() if with_jev else None), output
+    )
 
     assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
 
@@ -122,7 +127,7 @@ def _cross(accuracy: float) -> MethodResult:
 
 def test_report_with_cross_encoder_compares_it_to_jev() -> None:
     report = build_markdown_report(
-        _cosine_results(), _jev(0.85), _context(), cross_encoder_result=_cross(0.80)
+        BenchmarkResults(_cosine_results(), jev=_jev(0.85), cross_encoder=_cross(0.80)), _context()
     )
 
     assert "| D · cross-encoder vs descriptions |" in report
@@ -131,10 +136,8 @@ def test_report_with_cross_encoder_compares_it_to_jev() -> None:
 
 def test_report_with_cross_encoder_but_no_jev_compares_it_to_cosine() -> None:
     report = build_markdown_report(
-        _cosine_results(),
-        None,
+        BenchmarkResults(_cosine_results(), cross_encoder=_cross(0.75)),
         _context(jev_route=None, jev_catalog=None),
-        cross_encoder_result=_cross(0.75),
     )
 
     assert "+5.0 points vs cosine vs descriptions" in report
@@ -146,6 +149,8 @@ def test_render_accuracy_chart_with_cross_encoder_above_or_below_a(
 ) -> None:
     output = tmp_path / "chart.png"
 
-    render_accuracy_chart(_cosine_results(), _jev(), output, cross_encoder_result=_cross(accuracy))
+    render_accuracy_chart(
+        BenchmarkResults(_cosine_results(), jev=_jev(), cross_encoder=_cross(accuracy)), output
+    )
 
     assert output.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"

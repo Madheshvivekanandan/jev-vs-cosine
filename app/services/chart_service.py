@@ -16,6 +16,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import PercentFormatter
 
 from app.domain.benchmark_method import BenchmarkMethod
+from app.domain.benchmark_results import BenchmarkResults
 from app.domain.method_result import MethodResult
 from app.domain.seed_aggregate import SeedAggregate, aggregate_across_seeds
 
@@ -37,16 +38,11 @@ _LINE_WIDTH: Final = 2.0
 _MARKER_SIZE: Final = 9.0
 
 
-def render_accuracy_chart(
-    cosine_results: Sequence[MethodResult],
-    jev_result: MethodResult | None,
-    output_path: Path,
-    *,
-    cross_encoder_result: MethodResult | None = None,
-) -> None:
+def render_accuracy_chart(results: BenchmarkResults, output_path: Path) -> None:
     """Write the accuracy-vs-examples chart as a PNG."""
-    examples = [r for r in cosine_results if r.method is BenchmarkMethod.COSINE_EXAMPLES]
-    description = next(r for r in cosine_results if r.method is BenchmarkMethod.COSINE_DESCRIPTIONS)
+    jev_result, cross_encoder_result = results.jev, results.cross_encoder
+    examples = [r for r in results.cosine if r.method is BenchmarkMethod.COSINE_EXAMPLES]
+    description = next(r for r in results.cosine if r.method is BenchmarkMethod.COSINE_DESCRIPTIONS)
     aggregates = aggregate_across_seeds(examples)
     with mpl.rc_context({"font.family": "sans-serif", "font.sans-serif": _FONT_STACK}):
         figure = Figure(figsize=(9, 5.5), dpi=200, facecolor=_SURFACE)
