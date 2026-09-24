@@ -52,7 +52,12 @@ class _ZeroShotPoint:
     color: str
 
 
-def render_accuracy_chart(results: BenchmarkResults, output_path: Path) -> None:
+def render_accuracy_chart(
+    results: BenchmarkResults,
+    output_path: Path,
+    *,
+    sample_label: str = "Banking77 intent routing",
+) -> None:
     """Write the two-panel accuracy chart as a PNG."""
     description = next(r for r in results.cosine if r.method is BenchmarkMethod.COSINE_DESCRIPTIONS)
     examples = [r for r in results.cosine if r.method is BenchmarkMethod.COSINE_EXAMPLES]
@@ -68,7 +73,7 @@ def render_accuracy_chart(results: BenchmarkResults, output_path: Path) -> None:
             results.jev,
         )
         _style_y_axis(left)
-        _add_titles(figure, description.total)
+        _add_titles(figure, sample_label, description.total)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         figure.savefig(output_path, facecolor=_SURFACE, bbox_inches="tight")
 
@@ -224,7 +229,7 @@ def _direct_label(
     )
 
 
-def _add_titles(figure: Figure, test_messages: int) -> None:
+def _add_titles(figure: Figure, sample_label: str, test_messages: int) -> None:
     figure.suptitle(
         "Do you need Jev, or is cosine similarity enough?",
         x=0.07,
@@ -237,7 +242,7 @@ def _add_titles(figure: Figure, test_messages: int) -> None:
     figure.text(
         0.07,
         0.912,
-        f"Banking77 intent routing · {test_messages:,} test messages · 77 categories",
+        f"{sample_label} · {test_messages:,} test messages · 77 categories",
         color=_INK_SECONDARY,
         fontsize=9.5,
     )

@@ -1,0 +1,144 @@
+{"text": "Top up limit evlo?", "label": "top_up_limits", "source_text": "What's the top up limit?"}
+{"text": "Online la oru item order panni romba naal aachu, aana innum varave illa. Enakku podhum! En money-a thirupi kudunga, indha aalungaluku naan pay panna maaten.", "label": "request_refund", "source_text": "I ordered something ages ago online but it's simply not arriving. I've got enough! Give me back my money, I'm not paying these people."}
+{"text": "Naan currency exchange pannen, aana irukka vendiyadha vida adhigama charge pannirukeenga nu nenaikiren.", "label": "card_payment_wrong_exchange_rate", "source_text": "I made a currency exchange and think I was charged more than I should of been."}
+{"text": "En account la cash withdrawl ku indha charge enna?", "label": "cash_withdrawal_charge", "source_text": "What is this charge on my account for a cash withdrawl?"}
+{"text": "Please en top up-a evlo seekiram mudiyumo avlo seekiram go through pannunga. Enakku money romba venum, already oru mani neramaa pending la iruku.", "label": "pending_top_up", "source_text": "Can you please make my top up go through as soon as possible. I really need the money and it has been pending for an hour already."}
+{"text": "Physical card ku enakku evlo charge pannuveenga?", "label": "order_physical_card", "source_text": "What will I be charged for a physical card?"}
+{"text": "En card-a enga order pannanum?", "label": "order_physical_card", "source_text": "Where do I order my card?"}
+{"text": "En new card vandhuduchu, aana app la enga paathaalum kaanom. Ippo naan enna pannanum?", "label": "card_linking", "source_text": "I received my new card, but I don't see it in the app anywhere.  What do I do?"}
+{"text": "Yaaro en card information-a eduthutaanga nu thonuchuna naan enna pannanum?", "label": "compromised_card", "source_text": "What do I do if I think someone managed to get my card information?"}
+{"text": "Currencies exchange panna extra cost aagumaa?", "label": "exchange_charge", "source_text": "Does it cost extra to exchange currencies?"}
+{"text": "Identity check ku naan enna ellam kaatanum?", "label": "verify_my_identity", "source_text": "What all am I required to show for the identity check?"}
+{"text": "naan transfer panniten aana innum pending laye iruku", "label": "pending_transfer", "source_text": "i transfered however its still pending"}
+{"text": "Inniki kaalaila konjam things vaanginen, aana payment pending nu kaatudhu", "label": "pending_card_payment", "source_text": "I bought some things this morning but the payment shows that it is pending"}
+{"text": "En statement la extra oru pound ku yen fee iruku?", "label": "extra_charge_on_statement", "source_text": "Why is there a fee for an extra pound in my statement?"}
+{"text": "en ponnukku oru card venum, avala epdi add panradhu?", "label": "getting_spare_card", "source_text": "my daughter needs a card, how do i add her?"}
+{"text": "Hi. Naan unga system ku new customer, edho sariya work aagala nu thonudhu - illa maybe sari thaan-o. Neenga konjam confirm pannunga. Inniki top up panna try panninen (life la first time), oru mani nerathuku mela \"pending\" laye stuck-a iruku. Idhu ipdi dhaan irukanumaa illa system la edhavadhu problem-aa?", "label": "pending_top_up", "source_text": "Hi. I'm a new customer to your system and I think something isn't working right - or maybe it is. Maybe you can confirm. I tried to top up today (my first time ever) and it's been stuck at \"pending\" for over an hour now. Is it supposed to do this or is there something wrong in the system?"}
+{"text": "Inniki kaalaila en contactless use panna mudiyala, accept aagala.", "label": "contactless_not_working", "source_text": "I couldn't use my contactless this morning, it wasn't accepted."}
+{"text": "Hello! Naan recent-a oru purchase panninen, andha order-a cancel panni refund-a evlo seekiram mudiyumo avlo seekiram process pannanum.", "label": "request_refund", "source_text": "Hello! I recently made a purchase and I'm needing to cancel my order and process a refund as soon as possible."}
+{"text": "Account open panna minimum age evlo?", "label": "age_limit", "source_text": "What is the minimum age to open an account?"}
+{"text": "Naan balance transfer pannadhu yen kaatave illa?", "label": "balance_not_updated_after_bank_transfer", "source_text": "Why doesn't it show that I did a balance transfer?"}
+{"text": "Naan account-a top up panninen, first la confirm aachu, aana ippo money anga illa! Yen ipdi aachu, en money enga pochu?", "label": "top_up_reverted", "source_text": "I topped up my account and even though it was confirmed at first, the money isn't there anymore! why did this happen, and where did my money go?"}
+{"text": "Ippo naan US la irukken, card epdi vaangradhu?", "label": "country_support", "source_text": "Now that I live in the US how can I get a card?"}
+{"text": "Inniki en locker la irundhu en gym bag full-a, wallet oda sethu thirudu poiduchu. Wallet la irundha ellame poiduchu - card-a yaarum use panna mudiyaama epdi block panradhu?", "label": "lost_or_stolen_card", "source_text": "My entire gym bag, including my wallet, was stolen out of my locker today. Everything in my wallet is gone - how do I block the card to make it can't be used?"}
+{"text": "Virtual card enga order panna mudiyum?", "label": "getting_virtual_card", "source_text": "Where can I order a virtual card?"}
+{"text": "En account oda blocked PIN number-a epdi unblock panradhu?", "label": "pin_blocked", "source_text": "How can I unblock a blocked pin number for my account?"}
+{"text": "En card eppo activate aagum?", "label": "activate_my_card", "source_text": "When will my card be activated?"}
+{"text": "Enakku theriyaadha oru payment en account la yen irukum?", "label": "card_payment_not_recognised", "source_text": "Why would there be a payment on my account I don't recognize?"}
+{"text": "En account la oru fee iruku. Yen?", "label": "card_payment_fee_charged", "source_text": "There is a fee on my account. Why?"}
+{"text": "En transfer ku yen fee pottaanga?", "label": "transfer_fee_charged", "source_text": "Why was there a fee for my transfer?"}
+{"text": "CARD MISSING AANADHUKU APPURAM NAAN ENNA PANNALAM", "label": "activate_my_card", "source_text": "WHAT CAN I DO AFTER THE CARD MISSING"}
+{"text": "Enakku GBP illa, AUD dhaan venum, adha epdi maathuradhu?", "label": "exchange_via_app", "source_text": "I need AUD not GBP, how do I change it?"}
+{"text": "En card next month expire aagudhu, so naan new card order pannanumaa?", "label": "card_about_to_expire", "source_text": "Will I need to order a new card since mine expires next month?"}
+{"text": "Indha payment panni pala naal aachu, innum yen go through aagala?", "label": "pending_card_payment", "source_text": "I made this payment days ago so why hasn't it gone through yet?"}
+{"text": "Foreign ATM ku exchange rate yen vera maari iruku", "label": "wrong_exchange_rate_for_cash_withdrawal", "source_text": "why is the exchange rate for a Foreign ATM different"}
+{"text": "App la naan ATM la cash withdraw pannen nu kaatudhu, aana naan pannave illa", "label": "cash_withdrawal_not_recognised", "source_text": "The app said I withdrew cash at an ATM and I didn't"}
+{"text": "Oru naal la neraya disposable cards create panna mudiyumaa?", "label": "disposable_card_limits", "source_text": "Can I make many disposable cards per day?"}
+{"text": "En refund-a kaanom", "label": "Refund_not_showing_up", "source_text": "My refund is missing"}
+{"text": "En money oda source enna?", "label": "verify_source_of_funds", "source_text": "What is the source of my money?"}
+{"text": "ovvoru thadava account la log in pannum bodhum identity verify pannanumaa?", "label": "why_verify_identity", "source_text": "do I need to verify my identity every time I log into my account?"}
+{"text": "Top-up card ku edhavadhu verification code iruka?", "label": "verify_top_up", "source_text": "Is there a verification code for the top-up card?"}
+{"text": "En work naala ulagam full-a suthitu irukken, naan exchange panra ella money kum edhavadhu discount kidaikumaa?", "label": "exchange_charge", "source_text": "My work sends me all over the world, can I get a discount for all the money I have to exchange?"}
+{"text": "En card frozen aayiduchu, naan enna pannalam?", "label": "pin_blocked", "source_text": "My card's frozen, what can I do?"}
+{"text": "En top up yen work aagala?", "label": "top_up_failed", "source_text": "Why did my top up not work?"}
+{"text": "En card PIN-a kandupudikka help pannunga!", "label": "get_physical_card", "source_text": "Help me find my card pin!"}
+{"text": "Naan top up pannappo, app en funds-a revert pannidichu.", "label": "top_up_reverted", "source_text": "When I topped up, the app reverted my funds."}
+{"text": "En account ku money transfer pannanum, idha epdi pannradhu?", "label": "transfer_into_account", "source_text": "I need to transfer money into my account, how do I go about doing this?"}
+{"text": "En contactless yen work aaga maatengudhu nu ungaluku theriyumaa?", "label": "contactless_not_working", "source_text": "Do you know why my contactless won't work?"}
+{"text": "Currency exchange process epdi pannradhu?", "label": "exchange_via_app", "source_text": "How do I go through the process of currency exchange?"}
+{"text": "evlo top up panna mudiyum?", "label": "top_up_limits", "source_text": "how much can i top up?"}
+{"text": "En payment ku fee varumaa illaiyaa nu enga check panna mudiyum? Sila cases la charge pannureenga pola, adhula enna pattern?", "label": "card_payment_fee_charged", "source_text": "Can I check somewhere if there will be a fee on my payment or not? Seems you are charging in some cases, what's the pattern there?"}
+{"text": "Naan virtual card request panninen aana adhu show aagala. Yen?", "label": "getting_virtual_card", "source_text": "I requested a virtual card but it is not showing up. Why?"}
+{"text": "En card payment-a epdi fix pannuveenga?", "label": "declined_card_payment", "source_text": "How do you fix  my card payment?"}
+{"text": "Enakku current foreign exchange rate kidaikumaa?", "label": "exchange_rate", "source_text": "Will I get a curreng foreign exchange rate?"}
+{"text": "Veliya irukra vera bank la irundhu epdi money transfer panradhu?", "label": "transfer_into_account", "source_text": "How can I transfer money from an outside bank?"}
+{"text": "Oru week munnadi panna cash deposit innum show aagala. Enakku andha money venum - evlo seekiram idha sort out pannuveenga?", "label": "balance_not_updated_after_cheque_or_cash_deposit", "source_text": "My cash deposit from a week ago hasn't shown up. I need the money - how quickly can you sort this out?"}
+{"text": "transfer ku fee iruka? irundha evlo aagum?", "label": "top_up_by_bank_transfer_charge", "source_text": "is there a fee for a transfer? if so how much will it be?"}
+{"text": "ID verification ku enna process?", "label": "verify_my_identity", "source_text": "What's the process for ID verification?"}
+{"text": "En card-a epdi cancel panradhu? En account la naan pannaadha charges iruku.", "label": "cash_withdrawal_not_recognised", "source_text": "How do I cancel my card? There are charges on my account that I didn't make."}
+{"text": "Payment aagi sila weeks kalichu dhaan naan notice pannen na kooda adha dispute panna mudiyumaa?", "label": "direct_debit_payment_not_recognised", "source_text": "Can I dispute a payment even if I notice it several weeks after it was made?"}
+{"text": "Inga Visa vaanga mudiyumaa?", "label": "visa_or_mastercard", "source_text": "Is it possible to get a Visa here?"}
+{"text": "En card-a enga venaalum use panna mudiyumaa?", "label": "card_acceptance", "source_text": "Is my card usable anywhere?"}
+{"text": "Visa ku badhila Mastercard epdi select panradhu?", "label": "visa_or_mastercard", "source_text": "How do I select a Mastercard instead of a Visa?"}
+{"text": "App access panra code-a marandhuten.", "label": "passcode_forgotten", "source_text": "I forgot the code to access the app."}
+{"text": "Oru disposable card la evlo card payments panna mudiyum?", "label": "disposable_card_limits", "source_text": "How many card payments can I use on a disposable card?"}
+{"text": "En card yen work aagala nu epdi therinjukradhu?", "label": "card_not_working", "source_text": "How do I know why my card isn't working?"}
+{"text": "Check vechu epdi pay panradhu?", "label": "top_up_by_cash_or_cheque", "source_text": "How do I pay by check?"}
+{"text": "En pasangaluku account open panna mudiyumaa?", "label": "age_limit", "source_text": "Could I open an account for my children?"}
+{"text": "High St. Kensington la irukra Metro bank ATM en card-a swallow pannidichu. Adha thirumba epdi vaangradhu?", "label": "card_swallowed", "source_text": "The ATM at Metro bank on High St. Kensington swallowed my card. How do I get it back?"}
+{"text": "Aiyo kadavule, en card ATM la rendu thadava decline aayiduchu! Rendu vera vera ATM la try panninen, rendulayum card decline aachu! En account la enna nadakudhu nu sollunga?", "label": "declined_cash_withdrawal", "source_text": "Oh my goodness, my card has been declined twice at ATM! I tried two different ATM, but each one declined my card! Can you tell me what's going on with my account?"}
+{"text": "Help! En account-a thirumba thirumba check panren, aana refund show aagala. Konja naal munnadi oru seller kitta en money-a refund panna sonnen, aana account la money edhuvum kaatala. Neenga enakku enna panna mudiyum?", "label": "Refund_not_showing_up", "source_text": "Help! I keep checking my account, but my refund is not showing. I requested that a seller refund my money a while back, but there is no money showing in my account. What can you do for me?"}
+{"text": "Transfer fee pathi enakku konjam explain panna mudiyumaa?", "label": "transfer_fee_charged", "source_text": "Can you explain the transfer fee to me?"}
+{"text": "ATM machine en card-a thiruditu pochu.", "label": "card_swallowed", "source_text": "The ATM machine stole my card."}
+{"text": "Top ups ku enna fees?", "label": "top_up_by_card_charge", "source_text": "What are the fees for top ups?"}
+{"text": "En identification details ellathayum naan yen ungakitta kudukanum?", "label": "why_verify_identity", "source_text": "Why do I have to give you all of my identification details?"}
+{"text": "En balance la en transfer yen reflect aagala", "label": "balance_not_updated_after_bank_transfer", "source_text": "Why doesn't my balance reflect my transfer"}
+{"text": "En statement la indha $1 charge enna?", "label": "extra_charge_on_statement", "source_text": "What is this $1 charge on my statement?"}
+{"text": "Idhu URGENT, naan panna vendiya oru payment ku thappana payment information type panniten, send-um click panniten, andha transaction-a udane reverse pannanum.", "label": "cancel_transfer", "source_text": "This is URGENT, I typed the wrong payment information for a payment I needed to make and have clicked send, I need to reverse the transaction immediately."}
+{"text": "ATM la irundhu yen money edukka mudiyala?", "label": "declined_cash_withdrawal", "source_text": "How come I can't take money out of the ATM?"}
+{"text": "En source of funds-a epdi paakradhu?", "label": "verify_source_of_funds", "source_text": "How can I see my source of funds?"}
+{"text": "En old card-a thirumba system la podalaamaa? Ippo dhaan adha kandupudichen/", "label": "card_linking", "source_text": "Can I put my old card back into the system? I just found it/"}
+{"text": "Cash back epdi request panradhu? ATM ippo dhaan thappana amount kuduthuchu, aana app la naan actual-a charge aana amount dhaan kaatudhu...", "label": "wrong_amount_of_cash_received", "source_text": "How can I request cash back? The ATM just gave me the wrong amount, the app shows the amount that I've been actually charged though..."}
+{"text": "Oru suspicious direct debit payment iruku.", "label": "direct_debit_payment_not_recognised", "source_text": "There is a suspicious direct debit payment."}
+{"text": "En transfer-a epdi cancel panradhu?", "label": "cancel_transfer", "source_text": "How do I cancel my transfer?"}
+{"text": "En account la money pay pannirukken aana adhu show aagala.", "label": "balance_not_updated_after_cheque_or_cash_deposit", "source_text": "I have paid money into my account but it doesn't show."}
+{"text": "Transfer decline aayiduchu, adhanala panna mudiyala", "label": "declined_transfer", "source_text": "I could not do a transfer because it was declined"}
+{"text": "Next month en card expire aagidum, new card order pannanumaa?", "label": "card_about_to_expire", "source_text": "Next month my card will expire, do I need to order a new one?"}
+{"text": "epdi top up panradhu?", "label": "topping_up_by_card", "source_text": "how can i top up?"}
+{"text": "Withdrawal eppo show aagum nu ungaluku sure-a theriyumaa?", "label": "pending_cash_withdrawal", "source_text": "Are you sure when the withdrawal will show?"}
+{"text": "U.S. la irundhu vandha en other card-a accept pannuveengalaa?", "label": "supported_cards_and_currencies", "source_text": "Will you accept my other card from the U.S.?"}
+{"text": "En money-a enga withdraw panna mudiyum?", "label": "atm_support", "source_text": "Where can I withdrawal my money?"}
+{"text": "Heyy inniki en card vechu top up panna try panninen aana fail aayiduchu! Couple days munnadi dhaan vaanginen, last time work aachu. Enna nadakudhu, konjam double check pannunga please?", "label": "top_up_failed", "source_text": "Heyy I tried to top up with my card today but it failed! I just got the couple days before but it has worked last time. What's going on, can you double check please?"}
+{"text": "12 hours munnadi oru transfer panninen. Innum yen pending nu list aagi iruku?", "label": "pending_transfer", "source_text": "I made a transfer 12 hours ago. Why is it still listed as pending?"}
+{"text": "Top-up-a verify panradhu yen important?", "label": "verify_top_up", "source_text": "What is the importance of verifying the top-up?"}
+{"text": "En address maariduchu, adha change pannanum.", "label": "edit_personal_details", "source_text": "My address has updated and I need to change it."}
+{"text": "naan usa la iruntha epdi card vaangradhu", "label": "country_support", "source_text": "how do i get a card if i am in the usa"}
+{"text": "Holding and exchange ku enna maari fiat currency use panna mudiyum?", "label": "fiat_currency_support", "source_text": "What kind of fiat currency can I used for holding and exchange?"}
+{"text": "App la en personal details-a edit panna mudiyumaa?", "label": "edit_personal_details", "source_text": "Is it possible to edit my personal details on the app?"}
+{"text": "En transfer yen go through aagala?", "label": "failed_transfer", "source_text": "Why did my transfer not go through?"}
+{"text": "Neenga enna cards and currencies support pannureenga?", "label": "supported_cards_and_currencies", "source_text": "What cards and currencies do you support?"}
+{"text": "Enakku kidaikka vendiya cash amount kidaikkala.", "label": "wrong_amount_of_cash_received", "source_text": "I have not received the amount of cash i was supposed to."}
+{"text": "Naan veetla illaadha appo en pullai en card-a use pannirukanga nu nenaikiren.", "label": "compromised_card", "source_text": "I think my child used my card while I wasn't home."}
+{"text": "En card-a use panna mudiyala.", "label": "card_not_working", "source_text": "I cannot use my card."}
+{"text": "Exchange rate evlo irukum?", "label": "exchange_rate", "source_text": "The exchange rate would be?"}
+{"text": "En new card thirumba thirumba decline aagudhu. Inniki first time use panna romba excited-a irundhen. Yen ipdi aagudhu?", "label": "declined_card_payment", "source_text": "My new card keeps getting declined. I was very excited to use it for the first time today. Why is this doing this?"}
+{"text": "Pakkathula irukra ATM-a epdi kandupudikradhu?", "label": "atm_support", "source_text": "How can I find the nearest ATM?"}
+{"text": "Naan dhaan naan nu sonnaalum app yen namba maatengudhu?", "label": "unable_to_verify_identity", "source_text": "Why doesn't the app believe I am who I say I am?"}
+{"text": "Naan money anuppinen. Avangaluku innum varala.", "label": "transfer_not_received_by_recipient", "source_text": "I sent money.  They haven't received it."}
+{"text": "en account la naan pannaadha oru transaction iruku", "label": "card_payment_not_recognised", "source_text": "there is a transaction on my account that i didnt make"}
+{"text": "En PIN eppo kidaikum", "label": "get_physical_card", "source_text": "When do I receive my PIN"}
+{"text": "En card-a enga use pannalam nu enna rules?", "label": "card_acceptance", "source_text": "What are the rules to where I can use my card?"}
+{"text": "En PIN-a avasarama change pannanum, aana ippo overseas la vacation la irukken. Idha epdi pannradhu?", "label": "change_pin", "source_text": "I desperately need to change my PIN, but I'm overseas on vacation right now. How can I do this?"}
+{"text": "En new card eppo varum nu expect pannalaam?", "label": "card_delivery_estimate", "source_text": "When can I expect to receive my new card?"}
+{"text": "Naan ippo Austria la irukken. En PIN-a ASAP change pannanum, inga irundhe panna mudiyumaa?", "label": "change_pin", "source_text": "I am in Austria right now. I need to change my PIN ASAP, so can I still do this from here?"}
+{"text": "Extra cards order panna edhavadhu restrictions iruka?", "label": "getting_spare_card", "source_text": "Are there restrictions for ordering extra cards?"}
+{"text": "App kulla poga enna code venum?", "label": "passcode_forgotten", "source_text": "What is the code I need to get into the app?"}
+{"text": "2 weeks aachu, innum en card varala. Naan enna pannanum?", "label": "card_arrival", "source_text": "I still don't have my card after 2 weeks.  What should I do?"}
+{"text": "Nethu ennai mug pannitaanga, ellathayum eduthutu poitaanga. En app-a access panna mudiyala. Next steps enna?", "label": "lost_or_stolen_phone", "source_text": "I was mugged yesterday and they took everything.  I can't access my app.  What are my next steps?"}
+{"text": "Oru account ku transfer panna help pannuveengalaa", "label": "beneficiary_not_allowed", "source_text": "Can you help with a transfer to an account"}
+{"text": "\"auto-top\" feature enga iruku?", "label": "automatic_top_up", "source_text": "Where can I find the \"auto-top\" feature?"}
+{"text": "En salary deposit aagura currency illama vera currency la receive panna mudiyumaa?", "label": "receiving_money", "source_text": "Can I receive my salary in a currency other than what it is deposited in?"}
+{"text": "Beneficiary ku panna en transfer go through aagala", "label": "beneficiary_not_allowed", "source_text": "My transfer to beneficiary didn't go through"}
+{"text": "En recipient ku yen innum avanga money varala?", "label": "transfer_not_received_by_recipient", "source_text": "Why hasn't my recipient received their money?"}
+{"text": "Cash vechu en account-a top up panna mudiyumaa?", "label": "top_up_by_cash_or_cheque", "source_text": "Can I use cash to top up my account?"}
+{"text": "Indha bank la SWIFT transfers pathi konjam sollunga.", "label": "top_up_by_bank_transfer_charge", "source_text": "Please tell me about SWIFT transfers at this bank."}
+{"text": "Small withdrawal dhaan, adhuvum month oda 1st day la, aanalum ATM fee charge pannitaanga. Maasam 200 allowed nu nenachen?", "label": "cash_withdrawal_charge", "source_text": "Was charged an ATM fee despite it being a small withdrawal on the 1st day of the month. I thought I was allowed 200 per month?"}
+{"text": "Unga company enakku pidikala. En account-a delete pannunga.", "label": "terminate_account", "source_text": "I don't like your company. Delete my account."}
+{"text": "Cash withdrawal innum pending-aa?", "label": "pending_cash_withdrawal", "source_text": "Cash withdrawal still pending?"}
+{"text": "En card la yen onnukku mela charge iruku, naan onnukku dhaan pay panninen rendu thadava illa, idha epdi fix panradhu?", "label": "transaction_charged_twice", "source_text": "Why is there more then one charge on my card I only paid for one not twice how can I fix this?"}
+{"text": "Transfer submit pannum bodhu decline aagudhu. Naan pota information ellam review panniyaachu.", "label": "declined_transfer", "source_text": "When I submit a transfer, it is being declined.  The information I put in has been reviewed."}
+{"text": "En international withdrawal ku exchange rate yen thappa iruku?", "label": "wrong_exchange_rate_for_cash_withdrawal", "source_text": "Why is the exchange rate wrong for my international withdrawal?"}
+{"text": "En phone en kitta illaadha appo app-a epdi use panradhu?", "label": "lost_or_stolen_phone", "source_text": "How do I use the app if I don't have my phone with me?"}
+{"text": "Enakku double charge aayiduchu", "label": "transaction_charged_twice", "source_text": "I was double charged"}
+{"text": "Google Pay ku en top-up work aagala", "label": "apple_pay_or_google_pay", "source_text": "My top-up for Google Pay isn't working"}
+{"text": "China la irundhu oru important thing transfer pannanum. Approximately evlo neram aagum?", "label": "transfer_timing", "source_text": "There is an important thing from China that I need to transfer. Approximately how long will this take?"}
+{"text": "Oru item purchase panna appuram, enakku kudutha exchange rate correct-a illa", "label": "card_payment_wrong_exchange_rate", "source_text": "The exchange rate given to me wasn't correct, after i purchased an item"}
+{"text": "Adhu eppo deliver aaganum nu naan choose panna mudiyumaa?", "label": "card_delivery_estimate", "source_text": "May I choose when it's delivered?"}
+{"text": "Virtual card-a work aaga vekka enakku help venum.", "label": "virtual_card_not_working", "source_text": "I need help getting the virtual card to work."}
+{"text": "merchant payment-a refuse pannita funds enna aagum", "label": "reverted_card_payment?", "source_text": "what happens to the funds if a merchant refuses the payment"}
+{"text": "Enakku oru disposable virtual card-um kidaikumaa?", "label": "get_disposable_virtual_card", "source_text": "May I get a disposable virtual card as well?"}
+{"text": "Oru merchant kitta en virtual card use panna try panninen, reject aayiduchu. Idha epdi fix panradhu?", "label": "virtual_card_not_working", "source_text": "I was trying to use my virtual card at a merchant and it was rejected. How can I fix this?"}
+{"text": "Naan top-up panninen, aana innum en wallet la kaatala.", "label": "topping_up_by_card", "source_text": "I did a top-up, but I'm not seeing it in my wallet yet."}
+{"text": "En funds-a hold panna request panna, neenga enna currencies use pannuveenga?", "label": "fiat_currency_support", "source_text": "If I request that my funds be held, what currencies do you use?"}
+{"text": "En salary-a direct-a inga transfer panna mudiyumaa?", "label": "receiving_money", "source_text": "Can I directly transfer my salary onto here?"}
+{"text": "Apple Pay vechu top up panna mudiyumaa?", "label": "apple_pay_or_google_pay", "source_text": "Can I use Apple Pay to top up?"}

@@ -3,7 +3,11 @@ import pytest
 from app.domain.errors.configuration_error import ConfigurationError
 from app.domain.intent_catalog import IntentCatalog
 from app.domain.labeled_message import LabeledMessage
-from app.services.dataset_checks import ensure_catalog_matches_dataset, remove_test_duplicates
+from app.services.dataset_checks import (
+    ensure_catalog_matches_dataset,
+    ensure_labels_in_catalog,
+    remove_test_duplicates,
+)
 from tests.conftest import make_messages
 
 
@@ -33,3 +37,12 @@ def test_remove_test_duplicates_ignores_case_and_whitespace() -> None:
 
     assert removed == 1
     assert kept == [train[1]]
+
+
+def test_ensure_labels_in_catalog_accepts_a_subset(catalog: IntentCatalog) -> None:
+    ensure_labels_in_catalog(catalog, make_messages("alpha_intent", 2))
+
+
+def test_ensure_labels_in_catalog_names_unknown_labels(catalog: IntentCatalog) -> None:
+    with pytest.raises(ConfigurationError, match="gamma_intent"):
+        ensure_labels_in_catalog(catalog, make_messages("gamma_intent", 1))
