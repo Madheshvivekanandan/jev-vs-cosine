@@ -141,12 +141,13 @@ def test_build_parser_has_trained_classifier_command() -> None:
     ],
 )
 def test_results_for_keeps_each_experiment_in_its_own_folder(
-    argv: list[str], expected: str
+    tmp_path: Path, argv: list[str], expected: str
 ) -> None:
-    settings = BenchmarkSettings(_env_file=None, results_dir=Path("results"))  # type: ignore[call-arg]  # pydantic-settings init kwarg
+    # tmp_path, not the real results/ folder: path_for creates directories.
+    settings = BenchmarkSettings(_env_file=None, results_dir=tmp_path / "results")  # type: ignore[call-arg]  # pydantic-settings init kwarg
     repository = cli._results_for(settings, cli.build_parser().parse_args(argv))  # noqa: SLF001 - folder layout is the contract
 
-    assert repository.path_for("x.json").parent == Path(expected).resolve()
+    assert repository.path_for("x.json").parent == (tmp_path / expected).resolve()
 
 
 def test_jev_catalog_without_examples_is_the_plain_catalog() -> None:
