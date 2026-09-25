@@ -41,6 +41,8 @@ _WASH_ALPHA: Final = 0.10
 _LINE_WIDTH: Final = 2.0
 _MARKER_SIZE: Final = 9.0
 _CLOSE_LABELS: Final = 0.035
+_LABEL_BELOW_ABOVE: Final = 0.93
+_Y_MAX: Final = 1.03  # headroom so a 100% marker is not clipped
 
 
 @dataclass(frozen=True, slots=True)
@@ -214,12 +216,14 @@ def _plot_jev_reference(axes: Axes, jev_result: MethodResult, *, left_edge: int)
         label="B · Jev, no examples (band = 95% CI)",
     )
     text = f"Jev {jev_result.accuracy:.1%}"
-    _direct_label(axes, left_edge, jev_result.accuracy, text, offset=(2, 6))
+    # Near the top the label would run into the panel title, so put it under the line.
+    offset = (2.0, -14.0) if jev_result.accuracy > _LABEL_BELOW_ABOVE else (2.0, 6.0)
+    _direct_label(axes, left_edge, jev_result.accuracy, text, offset=offset)
 
 
 def _style_panel(axes: Axes, title: str) -> None:
     axes.set_facecolor(_SURFACE)
-    axes.set_ylim(0, 1)
+    axes.set_ylim(0, _Y_MAX)
     axes.grid(axis="y", color=_GRIDLINE, linewidth=1, linestyle="-")
     axes.set_axisbelow(True)
     for side in ("top", "right", "left"):
