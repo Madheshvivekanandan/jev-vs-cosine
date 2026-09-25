@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "case_id": "opencode_recording_bridge",
+      "matches": true,
+      "max_probability_gap": 0.010000000000000009,
+      "observed_input_tokens": 422,
+      "observed_response": {
+        "answers": {
+          "department": {
+            "choice": "billing",
+            "confidence": 1.0,
+            "probabilities": {
+              "billing": 1.0,
+              "sales": 0.0,
+              "technical": 0.0
+            },
+            "type": "choice"
+          },
+          "refund": {
+            "noul": 0.99,
+            "type": "noul"
+          },
+          "urgency": {
+            "confidence": 0.96,
+            "legend": {
+              "0": "Can wait for normal support",
+              "1": "Needs prompt attention",
+              "2": "Actively blocking revenue"
+            },
+            "probabilities": {
+              "0": 0.01,
+              "1": 0.97,
+              "2": 0.02
+            },
+            "score": 1.02,
+            "type": "score"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 422,
+          "output_tokens": 69
+        }
+      },
+      "reference_input_tokens": 422,
+      "same_decisions": true,
+      "strict_tokens": true
+    }
+  ],
+  "checked_at_utc": "20260925T044836Z",
+  "route_id": "opencode.ai/jev-1.13-free"
+}

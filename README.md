@@ -61,6 +61,7 @@ cp .env.example .env               # the default block is the free Jev route
 .venv/bin/python -m app.main run-cosine     # methods A and C, local and free (~1 min)
 .venv/bin/python -m app.main run-cross-encoder   # method D, local and free (~15 min, 2.3 GB model)
 .venv/bin/python -m app.main run-trained    # method E, local and free (~30 s)
+.venv/bin/python -m app.main verify-route  # check the route answers like TypeSafe (6 calls)
 .venv/bin/python -m app.main run-jev --limit 20 --dry-run   # estimate, calls nothing
 .venv/bin/python -m app.main run-jev --limit 20             # pilot
 .venv/bin/python -m app.main run-jev                        # all 1,001 test messages
@@ -78,6 +79,12 @@ run it again and it resumes without paying twice for any message.
 | Vercel AI Gateway `typesafe-ai/jev` | $0 from the $5/month free credit | a credit card on file | Heavily throttled on the free tier; model id is unversioned |
 | TypeSafe direct `jev-1.13.0` | $5 signup credit | an existing console account | New signups paused since 2026-09-22 |
 | OpenRouter, Cloudflare | paid | credits | Not free for Jev |
+
+**Is the free route really TypeSafe's Jev?** It is a third party, so the benchmark checks rather
+than trusts. `python -m app.main verify-route` replays six published TypeSafe answers through the
+configured route and compares token counts exactly, decisions exactly, and probabilities within
+0.05. The daily script repeats one of them as a drift canary before spending quota. See
+[`fingerprints/README.md`](fingerprints/README.md) for the evidence and its limits.
 
 Beware of lookalike "Jev API" sites and packages. The only official packages are PyPI
 `typesafe-sdk` / `system-one-adapter` and npm `@typesafe-ai/sdk`. `JEV_BASE_URL` is checked
