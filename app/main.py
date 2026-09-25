@@ -437,7 +437,8 @@ def _print_route_checks(checks: Sequence[RouteCheck]) -> None:
     for check in checks:
         c = check.comparison
         print(
-            f"{c.case_id:<28} tokens {c.reference_input_tokens}/{c.observed_input_tokens} "
+            f"{c.case_id:<28} tokens {c.reference_input_tokens}/{c.observed_input_tokens}"
+            f"{'' if c.strict_tokens else ' (advisory)'} "
             f"decisions {'same' if c.same_decisions else 'DIFFER'} "
             f"max-gap {c.max_probability_gap:.3f} {'match' if c.matches else 'MISMATCH'}"
         )

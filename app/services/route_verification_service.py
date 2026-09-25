@@ -34,7 +34,12 @@ class RouteVerificationService:
         checks: list[RouteCheck] = []
         for case in cases[:max_cases]:
             observed = self._caller.call(case.state, case.questions)
-            comparison = compare_to_reference(case.case_id, case.reference_response, observed)
+            comparison = compare_to_reference(
+                case.case_id,
+                case.reference_response,
+                observed,
+                strict_tokens=case.strict_tokens,
+            )
             checks.append(RouteCheck(comparison, observed))
         matched = sum(1 for check in checks if check.comparison.matches)
         logger.info("route_verified", extra={"cases": len(checks), "matched": matched})

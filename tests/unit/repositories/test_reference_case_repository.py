@@ -6,7 +6,7 @@ import pytest
 from app.domain.errors.configuration_error import ConfigurationError
 from app.repositories.reference_case_repository import load_reference_cases
 
-_SHIPPED = Path(__file__).resolve().parents[3] / "fingerprints" / "typesafe_reference.v1.json"
+_SHIPPED = Path(__file__).resolve().parents[3] / "fingerprints" / "typesafe_reference.v2.json"
 
 
 def test_load_reference_cases_reads_the_shipped_file() -> None:
@@ -15,6 +15,10 @@ def test_load_reference_cases_reads_the_shipped_file() -> None:
     assert [c.case_id for c in cases][:2] == ["opencode_recording_bridge", "typesafe_quickstart"]
     assert cases[0].reference_response["usage"] == {"input_tokens": 422, "output_tokens": 69}
     assert len(cases) == 6
+    assert [c.case_id for c in cases if c.strict_tokens] == [
+        "opencode_recording_bridge",
+        "openrouter_tutorial",
+    ]
 
 
 @pytest.mark.parametrize("content", ["[]", "[{}]", "not json"])
