@@ -28,6 +28,7 @@ class _CaseRecord(BaseModel):
     request: _Request
     # Any: a TypeSafe response body, compared field by field in the domain.
     reference_response: dict[str, Any]
+    strict_tokens: bool = True
 
 
 _CASES = TypeAdapter(list[_CaseRecord])
@@ -55,6 +56,7 @@ def load_reference_cases(path: Path) -> list[ReferenceCase]:
             state=record.request.state,
             questions=record.request.questions,
             reference_response=record.reference_response,
+            strict_tokens=record.strict_tokens,
         )
         for record in records
     ]

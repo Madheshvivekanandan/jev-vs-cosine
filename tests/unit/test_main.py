@@ -187,7 +187,7 @@ def test_verify_route_saves_evidence_and_fails_on_mismatch(
 ) -> None:
     monkeypatch.setattr(cli, "BenchmarkSettings", lambda: _route_settings(tmp_path))
     monkeypatch.setattr(cli, "create_typesafe_client", lambda **_kwargs: _NoClient())
-    reference = cli.load_reference_cases(Path("fingerprints/typesafe_reference.v1.json"))[0]
+    reference = cli.load_reference_cases(Path("fingerprints/typesafe_reference.v2.json"))[0]
     body = {**reference.reference_response, "usage": {"input_tokens": tokens, "output_tokens": 69}}
 
     class _FakeCaller:

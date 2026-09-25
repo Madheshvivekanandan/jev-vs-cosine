@@ -18,6 +18,7 @@ class ReferenceComparison:
     observed_input_tokens: int | None
     same_decisions: bool
     max_probability_gap: float
+    strict_tokens: bool = True
 
     @property
     def tokens_match(self) -> bool:
@@ -26,16 +27,25 @@ class ReferenceComparison:
 
     @property
     def matches(self) -> bool:
-        """Return whether the response is consistent with the same model serving it."""
+        """Return whether the response is consistent with the same model serving it.
+
+        Token counts must match exactly only for strict cases (dated live recordings).
+        Undated documentation examples may predate a prompt-template change, so for those
+        only decisions and probabilities are required to agree.
+        """
         return (
-            self.tokens_match
+            (self.tokens_match or not self.strict_tokens)
             and self.same_decisions
             and self.max_probability_gap <= PROBABILITY_TOLERANCE
         )
 
 
 def compare_to_reference(
-    case_id: str, reference: Mapping[str, object], observed: Mapping[str, object]
+    case_id: str,
+    reference: Mapping[str, object],
+    observed: Mapping[str, object],
+    *,
+    strict_tokens: bool = True,
 ) -> ReferenceComparison:
     """Compare two TypeSafe-format response bodies answer by answer."""
     reference_answers = _answers(reference)
@@ -52,6 +62,7 @@ def compare_to_reference(
         observed_input_tokens=_input_tokens(observed),
         same_decisions=same,
         max_probability_gap=gap,
+        strict_tokens=strict_tokens,
     )
 
 

@@ -72,3 +72,19 @@ def test_every_shipped_reference_case_matches_itself() -> None:
     for case in json.loads(_REFERENCE_CASES.read_text(encoding="utf-8")):
         reference = case["reference_response"]
         assert compare_to_reference(case["id"], reference, reference).matches, case["id"]
+
+
+def test_advisory_cases_tolerate_a_token_difference_but_not_a_decision_change() -> None:
+    same_answers = compare_to_reference(
+        "docs", _body(tokens=392), _body(tokens=425), strict_tokens=False
+    )
+    flipped = compare_to_reference(
+        "docs", _body(tokens=392, billing=1.0), _body(tokens=425, billing=0.2), strict_tokens=False
+    )
+
+    assert same_answers.matches
+    assert not flipped.matches
+
+
+def test_strict_is_the_default() -> None:
+    assert not compare_to_reference("c", _body(tokens=392), _body(tokens=425)).matches
