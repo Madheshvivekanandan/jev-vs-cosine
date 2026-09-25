@@ -1,0 +1,228 @@
+{
+  "cases": [
+    {
+      "case_id": "opencode_recording_bridge",
+      "matches": true,
+      "max_probability_gap": 0.010000000000000009,
+      "observed_input_tokens": 422,
+      "observed_response": {
+        "answers": {
+          "department": {
+            "choice": "billing",
+            "confidence": 1.0,
+            "probabilities": {
+              "billing": 1.0,
+              "sales": 0.0,
+              "technical": 0.0
+            },
+            "type": "choice"
+          },
+          "refund": {
+            "noul": 0.99,
+            "type": "noul"
+          },
+          "urgency": {
+            "confidence": 0.96,
+            "legend": {
+              "0": "Can wait for normal support",
+              "1": "Needs prompt attention",
+              "2": "Actively blocking revenue"
+            },
+            "probabilities": {
+              "0": 0.01,
+              "1": 0.97,
+              "2": 0.02
+            },
+            "score": 1.02,
+            "type": "score"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 422,
+          "output_tokens": 69
+        }
+      },
+      "reference_input_tokens": 422,
+      "same_decisions": true
+    },
+    {
+      "case_id": "typesafe_quickstart",
+      "matches": false,
+      "max_probability_gap": 0.020000000000000018,
+      "observed_input_tokens": 425,
+      "observed_response": {
+        "answers": {
+          "department": {
+            "choice": "technical",
+            "confidence": 0.74,
+            "probabilities": {
+              "billing": 0.17,
+              "sales": 0.0,
+              "technical": 0.83
+            },
+            "type": "choice"
+          },
+          "frustration": {
+            "confidence": 1.0,
+            "legend": {
+              "0": "Calm, just stating facts",
+              "1": "Frustrated but civil",
+              "2": "Very angry, strong language"
+            },
+            "probabilities": {
+              "0": 0.0,
+              "1": 1.0,
+              "2": 0.0
+            },
+            "score": 1.0,
+            "type": "score"
+          },
+          "is_urgent": {
+            "noul": 0.99,
+            "type": "noul"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 425,
+          "output_tokens": 73
+        }
+      },
+      "reference_input_tokens": 392,
+      "same_decisions": true
+    },
+    {
+      "case_id": "openrouter_tutorial",
+      "matches": true,
+      "max_probability_gap": 0.010000000000000009,
+      "observed_input_tokens": 476,
+      "observed_response": {
+        "answers": {
+          "is_bug": {
+            "noul": 0.96,
+            "type": "noul"
+          },
+          "team": {
+            "choice": "payments",
+            "confidence": 0.66,
+            "probabilities": {
+              "account": 0.0,
+              "frontend": 0.22,
+              "payments": 0.78
+            },
+            "type": "choice"
+          },
+          "urgency": {
+            "confidence": 0.99,
+            "legend": {
+              "0": "Can wait for the next release",
+              "1": "Should be fixed this week",
+              "2": "Blocking revenue right now"
+            },
+            "probabilities": {
+              "0": 0.0,
+              "1": 0.01,
+              "2": 0.99
+            },
+            "score": 1.99,
+            "type": "score"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 476,
+          "output_tokens": 70
+        }
+      },
+      "reference_input_tokens": 476,
+      "same_decisions": true
+    },
+    {
+      "case_id": "typesafe_docs_choice",
+      "matches": false,
+      "max_probability_gap": 0.0,
+      "observed_input_tokens": 357,
+      "observed_response": {
+        "answers": {
+          "department": {
+            "choice": "returns",
+            "confidence": 1.0,
+            "probabilities": {
+              "billing": 0.0,
+              "returns": 1.0,
+              "shipping": 0.0
+            },
+            "type": "choice"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 357,
+          "output_tokens": 38
+        }
+      },
+      "reference_input_tokens": 328,
+      "same_decisions": true
+    },
+    {
+      "case_id": "typesafe_docs_noul",
+      "matches": false,
+      "max_probability_gap": 0.009999999999999898,
+      "observed_input_tokens": 344,
+      "observed_response": {
+        "answers": {
+          "is_human_escalation": {
+            "noul": 0.99,
+            "type": "noul"
+          },
+          "is_repeat_contact": {
+            "noul": 0.94,
+            "type": "noul"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 344,
+          "output_tokens": 43
+        }
+      },
+      "reference_input_tokens": 360,
+      "same_decisions": true
+    },
+    {
+      "case_id": "typesafe_docs_score",
+      "matches": false,
+      "max_probability_gap": 0.0,
+      "observed_input_tokens": 341,
+      "observed_response": {
+        "answers": {
+          "bug_severity": {
+            "confidence": 0.35,
+            "legend": {
+              "0": "Cosmetic; no impact to functionality",
+              "1": "Broken or degraded feature, but workaround exists",
+              "2": "Blocking issue; no workaround exists"
+            },
+            "probabilities": {
+              "0": 0.0,
+              "1": 0.57,
+              "2": 0.43
+            },
+            "score": 1.43,
+            "type": "score"
+          }
+        },
+        "model": "jev-1.13-free",
+        "usage": {
+          "input_tokens": 341,
+          "output_tokens": 20
+        }
+      },
+      "reference_input_tokens": 332,
+      "same_decisions": true
+    }
+  ],
+  "checked_at_utc": "20260925T044523Z",
+  "route_id": "opencode.ai/jev-1.13-free"
+}
