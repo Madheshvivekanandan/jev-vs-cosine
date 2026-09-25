@@ -101,7 +101,8 @@ against an allow-list so a key can't be sent to a typo or a reseller.
 - **Hard token ceiling** (`JEV_MAX_TOTAL_INPUT_TOKENS`, default 3M). It counts earlier cached
   runs too, and refuses the call that would cross it rather than warning after.
 - **Answer cache** (`.cache/jev_decisions.jsonl`), append-only and keyed by route, model,
-  prompt fingerprint and message. It stores no message text.
+  prompt fingerprint and message. It stores no message text. It is committed to git, because
+  each answer spends free daily quota and a lost cache would mean paying for it again.
 - **Pacing and retries** are configurable per route, because OpenCode counts retries
   against its daily cap.
 - **The key never leaves `.env`:** it is held in a `SecretStr`, masked by a logging filter,
