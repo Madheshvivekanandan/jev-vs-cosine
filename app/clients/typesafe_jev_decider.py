@@ -97,7 +97,9 @@ class TypeSafeJevDecider:
         """
         question = Choice(instructions=catalog.instructions, criteria=dict(catalog.descriptions))
         started = self._clock()
-        response = self._call({_STATE_FIELD: message}, {_QUESTION_NAME: question})
+        response = call_system_one(
+            self._client, {_STATE_FIELD: message}, {_QUESTION_NAME: question}, model=self._model
+        )
         latency_ms = (self._clock() - started) * 1000
         answer = response.choices.get(_QUESTION_NAME)
         # Schema-valid is not the same as valid: re-check the choice in our own code.
@@ -112,14 +114,28 @@ class TypeSafeJevDecider:
             latency_ms=latency_ms,
         )
 
-    def _call(self, state: JSONContent, questions: Mapping[str, Question]) -> SystemOneResponse:
-        try:
-            return self._client.system_one(state, questions, model=self._model)
-        except _TRANSIENT_ERRORS as exc:
-            raise JevUnavailableError(f"Jev unavailable after retries: {exc}") from exc
-        except _CREDENTIAL_ERRORS as exc:
-            # str() of an SDK API error is the provider's own message (e.g. "add a credit
-            # card") plus the request id; it never contains the Authorization header.
-            raise ConfigurationError(f"Jev refused the key or account: {exc}") from exc
-        except TypeSafeError as exc:
-            raise JevRequestError(f"Jev rejected the request: {exc}") from exc
+
+def call_system_one(
+    client: SystemOneClient,
+    state: JSONContent,
+    questions: Mapping[str, Question],
+    *,
+    model: str,
+) -> SystemOneResponse:
+    """Call Jev once, translating SDK errors into the benchmark's own.
+
+    Raises:
+        JevUnavailableError: Rate limit, timeout, network or 5xx after SDK retries.
+        ConfigurationError: The route rejected the key or account.
+        JevRequestError: Any other rejection.
+    """
+    try:
+        return client.system_one(state, questions, model=model)
+    except _TRANSIENT_ERRORS as exc:
+        raise JevUnavailableError(f"Jev unavailable after retries: {exc}") from exc
+    except _CREDENTIAL_ERRORS as exc:
+        # str() of an SDK API error is the provider's own message (e.g. "add a credit
+        # card") plus the request id; it never contains the Authorization header.
+        raise ConfigurationError(f"Jev refused the key or account: {exc}") from exc
+    except TypeSafeError as exc:
+        raise JevRequestError(f"Jev rejected the request: {exc}") from exc

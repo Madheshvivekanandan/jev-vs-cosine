@@ -5,10 +5,12 @@ Usage: python -m app.main <command> [options]
 
 import argparse
 import dataclasses
+import json
 import logging
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final
 
@@ -18,6 +20,7 @@ from app.clients.cross_encoder_scorer import load_cross_encoder_scorer
 from app.clients.logistic_regression_trainer import LogisticRegressionTrainer
 from app.clients.sentence_transformer_embedder import load_sentence_transformer_embedder
 from app.clients.typesafe_jev_decider import TypeSafeJevDecider, create_typesafe_client
+from app.clients.typesafe_raw_caller import TypeSafeRawCaller
 from app.core.jev_route import JevRoute
 from app.core.logging_config import configure_logging
 from app.core.run_context import start_run
@@ -29,6 +32,7 @@ from app.domain.benchmark_results import BenchmarkResults
 from app.domain.dataset_split import DatasetSplit
 from app.domain.errors.app_error import AppError
 from app.domain.errors.configuration_error import ConfigurationError
+from app.domain.errors.route_mismatch_error import RouteMismatchError
 from app.domain.experiment_design import ExperimentDesign
 from app.domain.intent_catalog import IntentCatalog
 from app.domain.labeled_message import LabeledMessage
@@ -36,10 +40,12 @@ from app.domain.method_run import MethodRun
 from app.domain.metrics import summarize
 from app.domain.prediction import Prediction
 from app.domain.report_context import ReportContext
+from app.domain.route_check import RouteCheck
 from app.repositories.banking77_repository import Banking77Repository, fetch_https
 from app.repositories.intent_catalog_repository import load_intent_catalog
 from app.repositories.jev_decision_cache_repository import JevDecisionCacheRepository
 from app.repositories.probe_repository import ProbeRepository
+from app.repositories.reference_case_repository import load_reference_cases
 from app.repositories.results_repository import ResultsRepository
 from app.services.call_pacer import CallPacer
 from app.services.catalog_with_examples import catalog_with_examples
@@ -53,6 +59,7 @@ from app.services.dataset_checks import (
 )
 from app.services.jev_benchmark_service import JevBenchmarkService
 from app.services.report_builder import build_markdown_report
+from app.services.route_verification_service import RouteVerificationService
 from app.services.sampling import draw_example_pools, sample_test_set
 from app.services.token_budget import TokenBudget
 from app.services.trained_classifier_benchmark_service import TrainedClassifierBenchmarkService
@@ -91,6 +98,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     trained = commands.add_parser(
         "run-trained", help="run method E (classifier trained on past examples) locally"
+    )
+    verify = commands.add_parser(
+        "verify-route", help="replay published TypeSafe answers to check the Jev route"
+    )
+    verify.add_argument(
+        "--max-cases", type=int, default=6, help="reference cases to replay (1 = daily canary)"
     )
     report = commands.add_parser("report", help="write REPORT.md and the chart")
     for command in (cosine, jev, cross, trained, report):
@@ -385,6 +398,52 @@ def _print_estimate(
     return _EXIT_OK
 
 
+def _verify_route(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
+    route = settings.require_jev_route()
+    cases = load_reference_cases(settings.reference_cases_path)
+    with create_typesafe_client(
+        api_key=route.api_key,
+        base_url=route.base_url,
+        timeout_seconds=settings.jev_timeout_seconds,
+        max_retries=settings.jev_max_retries,
+    ) as client:
+        caller = TypeSafeRawCaller(client, model=route.model)
+        checks = RouteVerificationService(caller).verify(cases, max_cases=arguments.max_cases)
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    evidence = {
+        "checked_at_utc": stamp,
+        "route_id": route.route_id,
+        "cases": [
+            {
+                **dataclasses.asdict(c.comparison),
+                "matches": c.comparison.matches,
+                "observed_response": c.observed_response,
+            }
+            for c in checks
+        ],
+    }
+    path = ResultsRepository(settings.results_dir / "route_verification").write_text(
+        f"{stamp}.json", json.dumps(evidence, indent=2, sort_keys=True) + "\n"
+    )
+    _print_route_checks(checks)
+    failed = [c.comparison.case_id for c in checks if not c.comparison.matches]
+    if failed:
+        raise RouteMismatchError(f"{len(failed)} of {len(checks)} cases did not match: {failed}")
+    print(f"route {route.route_id} matches TypeSafe Jev on {len(checks)} cases; saved {path}")
+    return _EXIT_OK
+
+
+def _print_route_checks(checks: Sequence[RouteCheck]) -> None:
+    for check in checks:
+        c = check.comparison
+        print(
+            f"{c.case_id:<28} tokens {c.reference_input_tokens}/{c.observed_input_tokens}"
+            f"{'' if c.strict_tokens else ' (advisory)'} "
+            f"decisions {'same' if c.same_decisions else 'DIFFER'} "
+            f"max-gap {c.max_probability_gap:.3f} {'match' if c.matches else 'MISMATCH'}"
+        )
+
+
 def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     results = _results_for(settings, arguments)
     cosine_results = results.load_results("cosine")
@@ -444,6 +503,7 @@ _COMMANDS: Final[dict[str, Command]] = {
     "run-jev": _run_jev,
     "run-cross-encoder": _run_cross_encoder,
     "run-trained": _run_trained,
+    "verify-route": _verify_route,
     "report": _report,
 }
 

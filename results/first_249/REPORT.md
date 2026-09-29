@@ -4,6 +4,8 @@
 
 A classifier trained on the same past examples (method E) reaches Jev at **5 examples per category**, and scores 92.4% with 35 per category.
 
+Given the same 5 past examples per category inside its descriptions (B+), Jev scores **90.4%** (+7.2 points vs no examples). With those exact examples: C 77.1%, E 86.3%.
+
 A local cross-encoder that reads each message together with each description (method D) scores **70.7%**, -12.4 points vs Jev, at 813 ms per message on CPU.
 
 ![Accuracy vs past examples per category](accuracy_vs_examples.png)
@@ -12,6 +14,7 @@ A local cross-encoder that reads each message together with each description (me
 |---|---|---|---|---|---|---|
 | A · cosine vs descriptions | 0 | 72.3% (66.4%–77.5%) | 7 ms | 11 ms | 0 | $0.0000 |
 | B · Jev | 0 | 83.1% (78.0%–87.3%) | 770 ms | 906 ms | 591,682 | $0.0249 |
+| B+ · Jev with past examples in its descriptions | 5 | 90.4% (86.1%–93.4%) | 820 ms | 1097 ms | 2,184,286 | $0.0917 |
 | D · cross-encoder vs descriptions | 0 | 70.7% (64.7%–76.0%) | 813 ms | 1219 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 1 | 63.6% (range 60.6%–66.7% over 3 draws) | 7 ms | 11 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 5 | 78.8% (range 77.1%–81.5% over 3 draws) | 7 ms | 11 ms | 0 | $0.0000 |
@@ -31,5 +34,6 @@ A local cross-encoder that reads each message together with each description (me
 - Prompt catalog: `banking77_intents.v1`. Embedding model: `BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`, run locally on CPU (free). Jev: `opencode.ai/jev-1.13-free` (model reported: jev-1.13-free).
 - D scores (message, name + description) for every category with a cross-encoder reranker (`BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e`), 77 pairs per message, locally on CPU, with no examples. Its latency is all 77 pairs for one message.
 - E trains a logistic-regression classifier on the embeddings of the same past examples C votes with (same seeds, same messages). Training is offline and untimed.
+- B+ appends the seed-1 past examples C and E use at that setting to each of Jev's category descriptions, so its catalog, token count and cache namespace differ from B.
 - Latency for A and C is local embedding plus scoring per message. For Jev it is the full network round trip, including retry waits on routes with retries enabled.
 - List-price cost is what the run would cost at $0.042 per million input tokens, even when the route used was free.

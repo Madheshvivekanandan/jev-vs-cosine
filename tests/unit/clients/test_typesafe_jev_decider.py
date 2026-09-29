@@ -18,6 +18,7 @@ from typesafe_sdk import (
 )
 
 from app.clients.typesafe_jev_decider import TypeSafeJevDecider, create_typesafe_client
+from app.clients.typesafe_raw_caller import TypeSafeRawCaller
 from app.domain.errors.configuration_error import ConfigurationError
 from app.domain.errors.jev_request_error import JevRequestError
 from app.domain.errors.jev_unavailable_error import JevUnavailableError
@@ -133,3 +134,29 @@ def test_create_typesafe_client_with_malformed_key_is_a_configuration_error() ->
             timeout_seconds=5.0,
             max_retries=0,
         )
+
+
+def test_raw_caller_sends_the_request_verbatim_and_returns_the_body() -> None:
+    client = _FakeClient(_response())
+    caller = TypeSafeRawCaller(client, model="jev-1.13-free")
+
+    body = caller.call(
+        {"customer_message": "hi"}, {"intent": {"type": "choice", "criteria": {"a": None}}}
+    )
+
+    assert client.requests[0] == (
+        {"customer_message": "hi"},
+        {"intent": {"type": "choice", "criteria": {"a": None}}},
+        "jev-1.13-free",
+    )
+    assert body["model"] == "jev-1.13.0"
+    assert body["usage"] == {"input_tokens": 1900, "output_tokens": 40}
+
+
+def test_raw_caller_translates_rate_limits() -> None:
+    caller = TypeSafeRawCaller(
+        _FakeClient(error=_api_error(TypeSafeRateLimitError, 429, "cap")), model="m"
+    )
+
+    with pytest.raises(JevUnavailableError):
+        caller.call("hi", {"q": {"type": "noul"}})

@@ -141,12 +141,13 @@ def test_build_parser_has_trained_classifier_command() -> None:
     ],
 )
 def test_results_for_keeps_each_experiment_in_its_own_folder(
-    argv: list[str], expected: str
+    tmp_path: Path, argv: list[str], expected: str
 ) -> None:
-    settings = BenchmarkSettings(_env_file=None, results_dir=Path("results"))  # type: ignore[call-arg]  # pydantic-settings init kwarg
+    # tmp_path, not the real results/ folder: path_for creates directories.
+    settings = BenchmarkSettings(_env_file=None, results_dir=tmp_path / "results")  # type: ignore[call-arg]  # pydantic-settings init kwarg
     repository = cli._results_for(settings, cli.build_parser().parse_args(argv))  # noqa: SLF001 - folder layout is the contract
 
-    assert repository.path_for("x.json").parent == Path(expected).resolve()
+    assert repository.path_for("x.json").parent == (tmp_path / expected).resolve()
 
 
 def test_jev_catalog_without_examples_is_the_plain_catalog() -> None:
@@ -161,3 +162,44 @@ def test_jev_catalog_rejects_out_of_range_example_counts(per_label: int) -> None
 
     with pytest.raises(ConfigurationError, match="1 to 35"):
         cli._jev_catalog(inputs, per_label)  # noqa: SLF001 - B+ catalog choice
+
+
+class _NoClient:
+    def __enter__(self) -> "_NoClient":
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        return None
+
+
+def _route_settings(tmp_path: Path) -> BenchmarkSettings:
+    return BenchmarkSettings(  # type: ignore[call-arg]  # pydantic-settings init kwarg
+        _env_file=None,
+        results_dir=tmp_path / "results",
+        jev_api_key="public",
+        jev_base_url="https://opencode.ai/zen",
+        jev_model="jev-1.13-free",
+    )
+
+
+@pytest.mark.parametrize(("tokens", "exit_code"), [(422, 0), (500, 1)])
+def test_verify_route_saves_evidence_and_fails_on_mismatch(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, tokens: int, exit_code: int
+) -> None:
+    monkeypatch.setattr(cli, "BenchmarkSettings", lambda: _route_settings(tmp_path))
+    monkeypatch.setattr(cli, "create_typesafe_client", lambda **_kwargs: _NoClient())
+    reference = cli.load_reference_cases(Path("fingerprints/typesafe_reference.v2.json"))[0]
+    body = {**reference.reference_response, "usage": {"input_tokens": tokens, "output_tokens": 69}}
+
+    class _FakeCaller:
+        def __init__(self, _client: object, *, model: str) -> None:
+            self.model = model
+
+        def call(self, _state: object, _questions: object) -> dict[str, object]:
+            return body
+
+    monkeypatch.setattr(cli, "TypeSafeRawCaller", _FakeCaller)
+
+    assert cli.main(["verify-route", "--max-cases", "1"]) == exit_code
+    evidence = list((tmp_path / "results" / "route_verification").glob("*.json"))
+    assert len(evidence) == 1
