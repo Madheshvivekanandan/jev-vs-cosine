@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=80"]
+requires = ["setuptools>=83"]  # < 83 has PYSEC-2025-49 / PYSEC-2026-3447
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +7,8 @@ name = "jev-vs-cosine"
 version = "0.1.0"
 description = "Benchmark: TypeSafe Jev vs cosine similarity for intent classification on Banking77."
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "typesafe-sdk==0.7.1",          # official client for the Jev API
     "sentence-transformers==6.1.0", # free local embedding model for the cosine methods
