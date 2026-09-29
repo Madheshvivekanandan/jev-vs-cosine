@@ -1,0 +1,7 @@
+{
+  "catalog_fingerprint": "eff24cc39ed099170ca4ec6cc6a56a4bdcd2766f81a11f50bc8207e10004d67a",
+  "catalog_version": "banking77_intents.v1+examples5_seed1",
+  "price_usd_per_million_input_tokens": "0.042",
+  "route_id": "opencode.ai/jev-1.13-free",
+  "served_models": "jev-1.13-free"
+}
