@@ -72,6 +72,9 @@ def render_accuracy_chart(
             aggregate_across_seeds(list(results.trained)),
             results.jev,
         )
+        if results.jev_with_examples is not None:
+            _plot_jev_with_examples(right, results.jev_with_examples)
+        right.legend(loc="lower right", frameon=False, labelcolor=_INK_SECONDARY, fontsize=9)
         _style_y_axis(left)
         _add_titles(figure, sample_label, description.total)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -132,7 +135,6 @@ def _plot_learning_curves(
         _plot_curve(
             axes, trained, _TRAINED_AQUA, "E · classifier on the same examples", trained_offset
         )
-    axes.legend(loc="lower right", frameon=False, labelcolor=_INK_SECONDARY, fontsize=9)
 
 
 def _plot_curve(
@@ -178,6 +180,22 @@ def _end_label_offsets(
     return (
         (above, below) if cosine[-1].mean_accuracy >= trained[-1].mean_accuracy else (below, above)
     )
+
+
+def _plot_jev_with_examples(axes: Axes, plus: MethodResult) -> None:
+    axes.plot(
+        [plus.examples_per_label],
+        [plus.accuracy],
+        linestyle="none",
+        marker="s",
+        markersize=_MARKER_SIZE + 1,
+        markerfacecolor=_SURFACE,
+        markeredgecolor=_JEV_BLUE,
+        markeredgewidth=2.5,
+        label="B+ · Jev with the same examples in its descriptions",
+    )
+    text = f"Jev+ex {plus.accuracy:.1%}"
+    _direct_label(axes, plus.examples_per_label, plus.accuracy, text, offset=(-58, 8))
 
 
 def _plot_jev_reference(axes: Axes, jev_result: MethodResult, *, left_edge: int) -> None:
