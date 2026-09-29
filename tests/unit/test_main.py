@@ -121,3 +121,9 @@ def test_main_report_includes_cross_encoder_results_when_present(
     report = (tmp_path / "results" / "REPORT.md").read_text(encoding="utf-8")
     assert "| D · cross-encoder vs descriptions |" in report
     assert "reranker@abc" in report
+
+
+def test_build_parser_has_trained_classifier_command() -> None:
+    arguments = cli.build_parser().parse_args(["run-trained"])
+
+    assert (arguments.command, arguments.limit) == ("run-trained", None)
