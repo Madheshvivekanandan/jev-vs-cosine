@@ -39,12 +39,17 @@ from app.domain.report_context import ReportContext
 from app.repositories.banking77_repository import Banking77Repository, fetch_https
 from app.repositories.intent_catalog_repository import load_intent_catalog
 from app.repositories.jev_decision_cache_repository import JevDecisionCacheRepository
+from app.repositories.probe_repository import ProbeRepository
 from app.repositories.results_repository import ResultsRepository
 from app.services.call_pacer import CallPacer
 from app.services.chart_service import CHART_FILENAME, render_accuracy_chart
 from app.services.cosine_benchmark_service import CosineBenchmarkService
 from app.services.cross_encoder_benchmark_service import CrossEncoderBenchmarkService
-from app.services.dataset_checks import ensure_catalog_matches_dataset, remove_test_duplicates
+from app.services.dataset_checks import (
+    ensure_catalog_matches_dataset,
+    ensure_labels_in_catalog,
+    remove_test_duplicates,
+)
 from app.services.jev_benchmark_service import JevBenchmarkService
 from app.services.report_builder import build_markdown_report
 from app.services.sampling import sample_test_set
@@ -87,6 +92,12 @@ def build_parser() -> argparse.ArgumentParser:
             default=None,
             help="only the first N messages of the shuffled test sample; results go to "
             "results/first_N/ so every method is scored on the same messages",
+        )
+        command.add_argument(
+            "--probe",
+            default=None,
+            help="use a probe set from probes/ (e.g. tricky.v1) instead of the Banking77 "
+            "test sample; results go to results/probe_<name>/",
         )
     return parser
 
@@ -132,7 +143,7 @@ def _download(settings: BenchmarkSettings, _arguments: argparse.Namespace) -> in
     return _EXIT_OK
 
 
-def _load_inputs(settings: BenchmarkSettings) -> BenchmarkInputs:
+def _load_inputs(settings: BenchmarkSettings, probe: str | None) -> BenchmarkInputs:
     repository = Banking77Repository(settings.data_dir, fetch_https)
     repository.ensure_downloaded()
     full_train_set = repository.load(DatasetSplit.TRAIN)
@@ -140,9 +151,12 @@ def _load_inputs(settings: BenchmarkSettings) -> BenchmarkInputs:
     catalog = load_intent_catalog(settings.catalog_path)
     ensure_catalog_matches_dataset(catalog, full_train_set)
     ensure_catalog_matches_dataset(catalog, full_test_set)
-    train_set, removed = remove_test_duplicates(full_train_set, full_test_set)
+    probe_set = ProbeRepository(settings.probes_dir).load(probe) if probe else []
+    ensure_labels_in_catalog(catalog, probe_set)
+    # Past examples must never include a test message or a probe message.
+    train_set, removed = remove_test_duplicates(full_train_set, [*full_test_set, *probe_set])
     logger.info("train_test_duplicates_removed", extra={"count": removed})
-    test_set = sample_test_set(
+    test_set = probe_set or sample_test_set(
         full_test_set,
         per_label=_DESIGN.test_messages_per_label,
         seed=_DESIGN.test_sample_seed,
@@ -151,14 +165,14 @@ def _load_inputs(settings: BenchmarkSettings) -> BenchmarkInputs:
 
 
 def _run_cosine(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
-    inputs = _load_inputs(settings)
+    inputs = _load_inputs(settings, arguments.probe)
     test_set = _apply_limit(inputs.test_set, arguments.limit)
     embedder = load_sentence_transformer_embedder(
         settings.embedding_model_name, settings.embedding_model_revision
     )
     service = CosineBenchmarkService(embedder, _DESIGN, clock=time.perf_counter)
     runs = service.run(inputs.catalog, test_set, inputs.train_set)
-    results = _results_for(settings, arguments.limit)
+    results = _results_for(settings, arguments)
     path = results.save_runs("cosine", runs)
     results.save_metadata(
         "cosine",
@@ -186,7 +200,7 @@ def _print_cosine_summary(runs: Sequence[MethodRun]) -> None:
 
 
 def _run_cross_encoder(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
-    inputs = _load_inputs(settings)
+    inputs = _load_inputs(settings, arguments.probe)
     test_set = _apply_limit(inputs.test_set, arguments.limit)
     scorer = load_cross_encoder_scorer(
         settings.cross_encoder_model_name, settings.cross_encoder_model_revision
@@ -194,7 +208,7 @@ def _run_cross_encoder(settings: BenchmarkSettings, arguments: argparse.Namespac
     run = CrossEncoderBenchmarkService(scorer, clock=time.perf_counter).run(
         inputs.catalog, test_set
     )
-    results = _results_for(settings, arguments.limit)
+    results = _results_for(settings, arguments)
     path = results.save_runs("cross_encoder", [run])
     model = f"{settings.cross_encoder_model_name}@{settings.cross_encoder_model_revision}"
     results.save_metadata(
@@ -214,7 +228,7 @@ def _run_cross_encoder(settings: BenchmarkSettings, arguments: argparse.Namespac
 
 
 def _run_trained(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
-    inputs = _load_inputs(settings)
+    inputs = _load_inputs(settings, arguments.probe)
     test_set = _apply_limit(inputs.test_set, arguments.limit)
     embedder = load_sentence_transformer_embedder(
         settings.embedding_model_name, settings.embedding_model_revision
@@ -223,7 +237,7 @@ def _run_trained(settings: BenchmarkSettings, arguments: argparse.Namespace) -> 
         embedder, LogisticRegressionTrainer(), _DESIGN, clock=time.perf_counter
     )
     runs = service.run(test_set, inputs.train_set)
-    results = _results_for(settings, arguments.limit)
+    results = _results_for(settings, arguments)
     path = results.save_runs("trained_classifier", runs)
     results.save_metadata(
         "trained_classifier",
@@ -240,7 +254,7 @@ def _run_trained(settings: BenchmarkSettings, arguments: argparse.Namespace) -> 
 
 def _run_jev(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     route = settings.require_jev_route()
-    inputs = _load_inputs(settings)
+    inputs = _load_inputs(settings, arguments.probe)
     test_set = _apply_limit(inputs.test_set, arguments.limit)
     cache = JevDecisionCacheRepository(settings.cache_dir / "jev_decisions.jsonl")
     budget = TokenBudget(
@@ -261,7 +275,7 @@ def _run_jev(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
             return _print_estimate(service, inputs.catalog, test_set, settings, route.route_id)
         predictions = service.run(inputs.catalog, test_set, route_id=route.route_id)
         served = service.served_models(inputs.catalog, test_set, route_id=route.route_id)
-    results = _results_for(settings, arguments.limit)
+    results = _results_for(settings, arguments)
     _save_jev_result(settings, predictions, budget, results)
     results.save_metadata("jev", _jev_metadata(route, served, inputs.catalog, settings))
     return _EXIT_OK
@@ -290,11 +304,14 @@ def _apply_limit(test_set: list[LabeledMessage], limit: int | None) -> list[Labe
     return test_set[:limit]
 
 
-def _results_for(settings: BenchmarkSettings, limit: int | None) -> ResultsRepository:
-    # A limited run is a different experiment: keep it apart from the full-sample results.
-    if limit is None:
-        return ResultsRepository(settings.results_dir)
-    return ResultsRepository(settings.results_dir / f"first_{limit}")
+def _results_for(settings: BenchmarkSettings, arguments: argparse.Namespace) -> ResultsRepository:
+    # A probe or a limited run is a different experiment: keep it apart from the full sample.
+    base = settings.results_dir
+    if arguments.probe:
+        base = base / f"probe_{arguments.probe}"
+    if arguments.limit is not None:
+        base = base / f"first_{arguments.limit}"
+    return ResultsRepository(base)
 
 
 def _save_jev_result(
@@ -342,7 +359,7 @@ def _print_estimate(
 
 
 def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
-    results = _results_for(settings, arguments.limit)
+    results = _results_for(settings, arguments)
     cosine_results = results.load_results("cosine")
     if not cosine_results:
         raise ConfigurationError("no cosine results yet; run `run-cosine` first")
@@ -352,6 +369,7 @@ def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     cross_results = results.load_results("cross_encoder")
     cross_result = cross_results[0] if cross_results else None
     context = _report_context(results.load_metadata("cosine"), jev_metadata, settings)
+    context = dataclasses.replace(context, probe_name=arguments.probe)
     if cross_result is not None:
         cross_model = results.load_metadata("cross_encoder").get("cross_encoder_model")
         context = dataclasses.replace(context, cross_encoder_model=cross_model or "unknown")
@@ -361,7 +379,8 @@ def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
         cross_encoder=cross_result,
         trained=results.load_results("trained_classifier"),
     )
-    render_accuracy_chart(bundle, results.path_for(CHART_FILENAME))
+    sample_label = f"Probe {arguments.probe}" if arguments.probe else "Banking77 intent routing"
+    render_accuracy_chart(bundle, results.path_for(CHART_FILENAME), sample_label=sample_label)
     report = build_markdown_report(bundle, context)
     print(f"wrote {results.write_text('REPORT.md', report)}")
     return _EXIT_OK
