@@ -8,10 +8,12 @@ from decimal import Decimal
 class ReportContext:
     """What produced the numbers: models, prompt version, route, price, data cleaning.
 
-    `jev_route` and `jev_catalog_version` are None when Jev has not been run.
+    `jev_route` and `jev_catalog_version` are None when Jev has not been run, and
+    `cross_encoder_model` is None when method D has not been run.
     """
 
     embedding_model: str
+    cross_encoder_model: str | None
     catalog_version: str
     train_duplicates_removed: int
     jev_route: str | None

@@ -1,9 +1,9 @@
 """Render the one chart the benchmark exists to produce: accuracy vs examples per category.
 
-Colours are the dataviz reference palette's first three categorical slots, validated
-all-pairs for light mode (CVD ΔE 9.2, normal-vision ΔE 24.0). Aqua sits below 3:1
-contrast on the surface, so every series is also direct-labelled and the same numbers
-are in REPORT.md's table.
+Colours are dataviz reference-palette slots 1-3 plus violet (slot 7), the only fourth
+colour that validated all-pairs for light mode (worst CVD ΔE 9.2, normal-vision ΔE 16.3).
+Aqua sits below 3:1 contrast on the surface, so every series is also direct-labelled and
+the same numbers are in REPORT.md's table.
 """
 
 from collections.abc import Sequence
@@ -30,6 +30,7 @@ _AXIS: Final = "#c3c2b7"
 _JEV_BLUE: Final = "#2a78d6"
 _EXAMPLES_ORANGE: Final = "#eb6834"
 _DESCRIPTIONS_AQUA: Final = "#1baf7a"
+_CROSS_ENCODER_VIOLET: Final = "#4a3aa7"
 _FONT_STACK: Final = ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"]
 _WASH_ALPHA: Final = 0.10
 _LINE_WIDTH: Final = 2.0
@@ -40,6 +41,8 @@ def render_accuracy_chart(
     cosine_results: Sequence[MethodResult],
     jev_result: MethodResult | None,
     output_path: Path,
+    *,
+    cross_encoder_result: MethodResult | None = None,
 ) -> None:
     """Write the accuracy-vs-examples chart as a PNG."""
     examples = [r for r in cosine_results if r.method is BenchmarkMethod.COSINE_EXAMPLES]
@@ -51,6 +54,8 @@ def render_accuracy_chart(
         _style_axes(axes, aggregates)
         _plot_examples(axes, aggregates)
         _plot_descriptions(axes, description)
+        if cross_encoder_result is not None:
+            _plot_cross_encoder(axes, cross_encoder_result, above=description.accuracy)
         if jev_result is not None:
             _plot_jev(axes, jev_result, right_edge=aggregates[-1].examples_per_label)
         _add_titles(figure, description.total)
@@ -119,6 +124,23 @@ def _plot_descriptions(axes: Axes, description: MethodResult) -> None:
     _direct_label(axes, 0, description.accuracy, f"A {description.accuracy:.1%}")
 
 
+def _plot_cross_encoder(axes: Axes, cross_encoder: MethodResult, *, above: float) -> None:
+    axes.plot(
+        [0],
+        [cross_encoder.accuracy],
+        linestyle="none",
+        marker="D",
+        markersize=_MARKER_SIZE - 1,
+        color=_CROSS_ENCODER_VIOLET,
+        markeredgecolor=_SURFACE,
+        markeredgewidth=2,
+        label="D · cross-encoder vs descriptions (no examples)",
+    )
+    # Both A and D sit at x=0: put D's label on the side away from A's so they never collide.
+    offset = (8, -14) if cross_encoder.accuracy <= above else (8, 6)
+    _direct_label(axes, 0, cross_encoder.accuracy, f"D {cross_encoder.accuracy:.1%}", offset=offset)
+
+
 def _plot_jev(axes: Axes, jev_result: MethodResult, *, right_edge: int) -> None:
     axes.axhspan(
         jev_result.accuracy_ci_low,
@@ -137,11 +159,13 @@ def _plot_jev(axes: Axes, jev_result: MethodResult, *, right_edge: int) -> None:
     _direct_label(axes, right_edge, jev_result.accuracy, f"Jev {jev_result.accuracy:.1%}")
 
 
-def _direct_label(axes: Axes, x: float, y: float, text: str) -> None:
+def _direct_label(
+    axes: Axes, x: float, y: float, text: str, *, offset: tuple[float, float] = (8, 6)
+) -> None:
     axes.annotate(
         text,
         xy=(x, y),
-        xytext=(8, 6),
+        xytext=offset,
         textcoords="offset points",
         color=_INK_PRIMARY,
         fontsize=9,

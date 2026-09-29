@@ -40,6 +40,8 @@ class BenchmarkSettings(BaseSettings):
     jev_price_usd_per_million_input_tokens: Decimal = Field(default=Decimal("0.042"), ge=0)
     embedding_model_name: str = "BAAI/bge-small-en-v1.5"
     embedding_model_revision: str = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+    cross_encoder_model_name: str = "BAAI/bge-reranker-v2-m3"
+    cross_encoder_model_revision: str = "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
     data_dir: Path = Path("data")
     cache_dir: Path = Path(".cache")
     results_dir: Path = Path("results")
