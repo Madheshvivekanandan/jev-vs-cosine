@@ -4,6 +4,7 @@ Usage: python -m app.main <command> [options]
 """
 
 import argparse
+import dataclasses
 import logging
 import sys
 import time
@@ -13,6 +14,7 @@ from typing import Final
 
 from pydantic import ValidationError
 
+from app.clients.cross_encoder_scorer import load_cross_encoder_scorer
 from app.clients.sentence_transformer_embedder import load_sentence_transformer_embedder
 from app.clients.typesafe_jev_decider import TypeSafeJevDecider, create_typesafe_client
 from app.core.jev_route import JevRoute
@@ -39,6 +41,7 @@ from app.repositories.results_repository import ResultsRepository
 from app.services.call_pacer import CallPacer
 from app.services.chart_service import CHART_FILENAME, render_accuracy_chart
 from app.services.cosine_benchmark_service import CosineBenchmarkService
+from app.services.cross_encoder_benchmark_service import CrossEncoderBenchmarkService
 from app.services.dataset_checks import ensure_catalog_matches_dataset, remove_test_duplicates
 from app.services.jev_benchmark_service import JevBenchmarkService
 from app.services.report_builder import build_markdown_report
@@ -67,8 +70,11 @@ def build_parser() -> argparse.ArgumentParser:
     cosine = commands.add_parser("run-cosine", help="run methods A and C locally (free, no key)")
     jev = commands.add_parser("run-jev", help="run method B (Jev) with cache and budget")
     jev.add_argument("--dry-run", action="store_true", help="estimate tokens; call nothing")
+    cross = commands.add_parser(
+        "run-cross-encoder", help="run method D (cross-encoder) locally (free, no key)"
+    )
     report = commands.add_parser("report", help="write REPORT.md and the chart")
-    for command in (cosine, jev, report):
+    for command in (cosine, jev, cross, report):
         command.add_argument(
             "--limit",
             type=int,
@@ -170,6 +176,34 @@ def _print_cosine_summary(runs: Sequence[MethodRun]) -> None:
             f"{result.method.value:<22} examples/label={result.examples_per_label:<3}{seed:<8} "
             f"accuracy={result.accuracy:.1%}"
         )
+
+
+def _run_cross_encoder(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
+    inputs = _load_inputs(settings)
+    test_set = _apply_limit(inputs.test_set, arguments.limit)
+    scorer = load_cross_encoder_scorer(
+        settings.cross_encoder_model_name, settings.cross_encoder_model_revision
+    )
+    run = CrossEncoderBenchmarkService(scorer, clock=time.perf_counter).run(
+        inputs.catalog, test_set
+    )
+    results = _results_for(settings, arguments.limit)
+    path = results.save_runs("cross_encoder", [run])
+    model = f"{settings.cross_encoder_model_name}@{settings.cross_encoder_model_revision}"
+    results.save_metadata(
+        "cross_encoder",
+        {
+            "cross_encoder_model": model,
+            "catalog_version": inputs.catalog.version,
+            "catalog_fingerprint": inputs.catalog.fingerprint(),
+        },
+    )
+    print(
+        f"{run.result.method.value} accuracy={run.result.accuracy:.1%}; "
+        f"median {run.result.median_latency_ms:.0f} ms per message"
+    )
+    print(f"saved {path}")
+    return _EXIT_OK
 
 
 def _run_jev(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
@@ -283,9 +317,21 @@ def _report(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
     jev_results = results.load_results("jev")
     jev_result = jev_results[0] if jev_results else None
     jev_metadata = results.load_metadata("jev") if jev_result is not None else {}
+    cross_results = results.load_results("cross_encoder")
+    cross_result = cross_results[0] if cross_results else None
     context = _report_context(results.load_metadata("cosine"), jev_metadata, settings)
-    render_accuracy_chart(cosine_results, jev_result, results.path_for(CHART_FILENAME))
-    report = build_markdown_report(cosine_results, jev_result, context)
+    if cross_result is not None:
+        cross_model = results.load_metadata("cross_encoder").get("cross_encoder_model")
+        context = dataclasses.replace(context, cross_encoder_model=cross_model or "unknown")
+    render_accuracy_chart(
+        cosine_results,
+        jev_result,
+        results.path_for(CHART_FILENAME),
+        cross_encoder_result=cross_result,
+    )
+    report = build_markdown_report(
+        cosine_results, jev_result, context, cross_encoder_result=cross_result
+    )
     print(f"wrote {results.write_text('REPORT.md', report)}")
     return _EXIT_OK
 
@@ -303,6 +349,7 @@ def _report_context(
     default_price = str(settings.jev_price_usd_per_million_input_tokens)
     return ReportContext(
         embedding_model=cosine_metadata.get("embedding_model", "unknown"),
+        cross_encoder_model=None,
         catalog_version=cosine_metadata.get("catalog_version", "unknown"),
         train_duplicates_removed=int(cosine_metadata.get("train_duplicates_removed", "0")),
         jev_route=jev_route,
@@ -317,6 +364,7 @@ _COMMANDS: Final[dict[str, Command]] = {
     "download": _download,
     "run-cosine": _run_cosine,
     "run-jev": _run_jev,
+    "run-cross-encoder": _run_cross_encoder,
     "report": _report,
 }
 

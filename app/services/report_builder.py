@@ -19,6 +19,8 @@ def build_markdown_report(
     cosine_results: Sequence[MethodResult],
     jev_result: MethodResult | None,
     context: ReportContext,
+    *,
+    cross_encoder_result: MethodResult | None = None,
 ) -> str:
     """Return the full REPORT.md text: headline, chart, table and how to read it."""
     description = _only(cosine_results, BenchmarkMethod.COSINE_DESCRIPTIONS)
@@ -27,15 +29,33 @@ def build_markdown_report(
     rows = [_result_row("A · cosine vs descriptions", description)]
     if jev_result is not None:
         rows.append(_result_row("B · Jev", jev_result))
+    if cross_encoder_result is not None:
+        rows.append(_result_row("D · cross-encoder vs descriptions", cross_encoder_result))
     rows.extend(_aggregate_row(aggregate, examples) for aggregate in aggregates)
+    headline = _headline(description, jev_result, aggregates)
+    if cross_encoder_result is not None:
+        headline += "\n\n" + _cross_encoder_line(description, jev_result, cross_encoder_result)
     sections = [
         "# Results: Jev vs cosine similarity on Banking77",
-        _headline(description, jev_result, aggregates),
+        headline,
         f"![Accuracy vs past examples per category]({CHART_FILENAME})",
         "\n".join([_HEADER, *rows]),
         _notes(description.total, aggregates, context),
     ]
     return "\n\n".join(sections) + "\n"
+
+
+def _cross_encoder_line(
+    description: MethodResult, jev_result: MethodResult | None, cross_encoder: MethodResult
+) -> str:
+    baseline = jev_result if jev_result is not None else description
+    name = "Jev" if jev_result is not None else "cosine vs descriptions"
+    gap_points = (cross_encoder.accuracy - baseline.accuracy) * 100
+    return (
+        f"A local cross-encoder that reads each message together with each description "
+        f"(method D) scores **{cross_encoder.accuracy:.1%}**, {gap_points:+.1f} points vs {name}, "
+        f"at {cross_encoder.median_latency_ms:.0f} ms per message on CPU."
+    )
 
 
 def find_crossover(aggregates: Sequence[SeedAggregate], jev_accuracy: float) -> int | None:
@@ -108,6 +128,9 @@ def _notes(test_messages: int, aggregates: Sequence[SeedAggregate], context: Rep
         f"- Prompt catalog: `{context.catalog_version}`. Embedding model: "
         f"`{context.embedding_model}`, run locally on CPU (free). "
         f"Jev: {context.jev_route or 'not run'}.",
+        "- D scores (message, name + description) for every category with a cross-encoder "
+        f"reranker (`{context.cross_encoder_model or 'not run'}`), 77 pairs per message, locally "
+        "on CPU, with no examples. Its latency is all 77 pairs for one message.",
         "- Latency for A and C is local embedding plus scoring per message. For Jev it is the "
         "full network round trip, including retry waits on routes with retries enabled.",
         "- List-price cost is what the run would cost at "
