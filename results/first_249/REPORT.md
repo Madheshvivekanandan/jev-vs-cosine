@@ -4,6 +4,8 @@
 
 A classifier trained on the same past examples (method E) reaches Jev at **5 examples per category**, and scores 92.4% with 35 per category.
 
+Given the same 5 past examples per category inside its descriptions (B+), Jev scores **90.4%** (+7.2 points vs no examples). With those exact examples: C 77.1%, E 86.3%.
+
 A local cross-encoder that reads each message together with each description (method D) scores **70.7%**, -12.4 points vs Jev, at 813 ms per message on CPU.
 
 ![Accuracy vs past examples per category](accuracy_vs_examples.png)
@@ -12,6 +14,7 @@ A local cross-encoder that reads each message together with each description (me
 |---|---|---|---|---|---|---|
 | A · cosine vs descriptions | 0 | 72.3% (66.4%–77.5%) | 7 ms | 11 ms | 0 | $0.0000 |
 | B · Jev | 0 | 83.1% (78.0%–87.3%) | 770 ms | 906 ms | 591,682 | $0.0249 |
+| B+ · Jev with past examples in its descriptions | 5 | 90.4% (86.1%–93.4%) | 820 ms | 1097 ms | 2,184,286 | $0.0917 |
 | D · cross-encoder vs descriptions | 0 | 70.7% (64.7%–76.0%) | 813 ms | 1219 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 1 | 63.6% (range 60.6%–66.7% over 3 draws) | 7 ms | 11 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 5 | 78.8% (range 77.1%–81.5% over 3 draws) | 7 ms | 11 ms | 0 | $0.0000 |
