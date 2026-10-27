@@ -25,8 +25,10 @@ jobs:
         run: python -m pip install --upgrade pip "setuptools>=83"
       - name: Install CPU-only torch (the default Linux wheel bundles CUDA)
         run: pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+      # The PyTorch CPU index ships its own older filelock (3.32.3, CVE-2026-112907 and two
+      # others, fixed in 4.2.1), and nothing else upgrades it.
       - name: Install project and dev tools
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev]" "filelock>=4.2.1"
       - name: Format
         run: ruff format --check .
       - name: Lint
