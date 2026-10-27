@@ -1,0 +1,16 @@
+[
+  {
+    "accuracy": 0.835985312117503,
+    "accuracy_ci_high": 0.859793492567265,
+    "accuracy_ci_low": 0.8090322589541004,
+    "correct": 683,
+    "examples_per_label": 0,
+    "input_tokens": 1941052,
+    "list_price_cost_usd": "0.081524184",
+    "median_latency_ms": 777.8819160303101,
+    "method": "B_jev",
+    "p95_latency_ms": 929.3326659826562,
+    "seed": null,
+    "total": 817
+  }
+]
