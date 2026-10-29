@@ -31,6 +31,18 @@ per IP per day, so the run resumed over several days
   With those exact examples the classifier scores 86.3% and cosine voting 77.1%. B+ sends about
   3.7 times the input tokens.
 
+On messages built to be hard, the gap is much wider (no examples for A, D and Jev; 35 per
+category for C):
+
+| Probe | Cosine (A) | Cross-encoder (D) | Cosine + 35 examples (C) | Jev (B) |
+|---|---|---|---|---|
+| [Trick questions](results/probe_tricky.v1/REPORT.md) (105) | 64.8% | 79.0% | 60.6% | **100.0%** |
+| [English originals](results/probe_english_source.v1/REPORT.md) (144) | 72.2% | 69.4% | 93.8% | 86.1% |
+| [Hinglish](results/probe_hinglish.v1/REPORT.md) (same 144) | 47.9% | 56.2% | 63.7% | **85.4%** |
+| [Tanglish](results/probe_tanglish.v1/REPORT.md) (same 144) | 41.7% | 53.5% | 64.6% | **77.1%** |
+
+[`probes/README.md`](probes/README.md) explains how each probe set was built and checked.
+
 ## The question, in plain English
 
 A bank's support inbox gets a message like *"I paid at the supermarket and it said
