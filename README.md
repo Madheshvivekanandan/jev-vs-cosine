@@ -9,26 +9,27 @@ against plain embedding cosine similarity, on the
 It runs at **$0**: cosine similarity and a cross-encoder run locally, and Jev is called
 through a free route.
 
-## Results so far
+## Results
 
-Jev has answered **249 of the 1,001** test messages. OpenCode's free route allows about 250
-requests per IP per day, so the run resumes each day. Scored on those same 249 messages
-([`results/first_249/REPORT.md`](results/first_249/REPORT.md)):
+Jev has answered all **1,001** test messages. OpenCode's free route allows about 250 requests
+per IP per day, so the run resumed over several days
+([`results/REPORT.md`](results/REPORT.md)):
 
-![Accuracy vs past examples per category, first 249 messages](results/first_249/accuracy_vs_examples.png)
+![Accuracy vs past examples per category, 1,001 messages](results/accuracy_vs_examples.png)
 
-- **With no examples, Jev (83.1%) beats cosine-vs-descriptions (72.3%) by about 11 points.**
+- **With no examples, Jev (83.3%) beats cosine-vs-descriptions (73.2%) by 10 points.**
 - **With just 5 labelled examples per category, a free logistic-regression classifier matches
-  Jev** (method E, about 84%). Plain cosine voting (method C) needs about 10 (86.6%). Both reach
-  92-93% with 35.
-- **One example per category (64%) does worse than a one-line description (72%).**
+  Jev** (method E, 84.2%). Plain cosine voting (method C) needs 10 (85.9%). Both reach about
+  91% with 35.
+- **One example per category (63%) does worse than a one-line description (73%).**
 - **A cross-encoder reranker doesn't close the gap.** `bge-reranker-v2-m3` reads each message
   together with each description, much as Jev reads a message with its options, yet it scores
-  70.7% (71.1% on all 1,001 messages, against 73.2% for cosine). That is no better than plain
-  cosine and 12 points below Jev, at the same ~0.8 s per message (on a laptop CPU).
-
-The cosine and cross-encoder methods on all 1,001 messages are in [`results/REPORT.md`](results/REPORT.md).
-These numbers are preliminary until Jev finishes the full sample.
+  71.1%. That is no better than plain cosine and 12 points below Jev, at about the same time
+  per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network round trip).
+- **Given the same 5 examples inside its descriptions, Jev reaches 90.4%** (method B+, run on
+  the first 249 messages only: [`results/first_249/REPORT.md`](results/first_249/REPORT.md)).
+  With those exact examples the classifier scores 86.3% and cosine voting 77.1%. B+ sends about
+  3.7 times the input tokens.
 
 ## The question, in plain English
 
