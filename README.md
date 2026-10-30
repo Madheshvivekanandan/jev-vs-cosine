@@ -216,9 +216,25 @@ app/
   core/          settings, logging, run id
   main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev |
                  verify-route | report | triage
+  utils/         small text helpers
 prompts/         versioned category descriptions (the "prompt")
-results/         committed outputs: REPORT.md, chart, per-message predictions
+probes/          extra test sets: trick questions, Hinglish, Tanglish (see probes/README.md)
+fingerprints/    published TypeSafe answers that verify-route replays
+scripts/         run_jev_daily.sh: resumes Jev runs under the free route's daily cap
+results/         committed outputs (map below)
+.cache/          jev_decisions.jsonl: every Jev answer, so results rebuild with no calls
+.claude/skills/  the coding standard contributors' agents follow
 tests/unit/      pytest suite mirroring app/
+```
+
+```
+results/
+  REPORT.md, TRIAGE.md, *.json  the 1,001-message Banking77 sample, all methods
+  predictions/                  every method's answer to every message
+  probe_<name>/                 the same for each probe set
+  first_249/                    the first 249 messages, where B+ (Jev with examples) ran
+  embedder_bge-m3/              methods A, C and E re-run with a multilingual embedder
+  route_verification/           the evidence from each verify-route run
 ```
 
 ## Quality gates
@@ -230,7 +246,10 @@ tests/unit/      pytest suite mirroring app/
 .venv/bin/pip-audit --skip-editable
 ```
 
-CI runs the same gates on every push and pull request (`.github/workflows/ci.yml`).
+CI runs the same gates on every pull request and every push to `main`
+(`.github/workflows/ci.yml`).
+
+## Data, credits and licenses
 
 [Banking77](https://github.com/PolyAI-LDN/task-specific-datasets) is by PolyAI, released under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): Iñigo Casanueva, Tadas Temčinas,
