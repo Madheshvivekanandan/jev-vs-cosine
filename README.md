@@ -23,13 +23,16 @@ per IP per day, so the run resumed over several days
   91% with 35.
 - **One example per category (63%) does worse than a one-line description (73%).**
 - **A cross-encoder reranker doesn't close the gap.** `bge-reranker-v2-m3` reads each message
-  together with each description, much as Jev reads a message with its options, yet it scores
-  71.1%. That is no better than plain cosine and 12 points below Jev, at about the same time
-  per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network round trip).
+  together with each description, much as Jev reads a message with its options, yet on this
+  English sample it scores 71.1%. That is no better than plain cosine and 12 points below Jev,
+  at about the same time per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network
+  round trip). On the harder probe sets below it does beat cosine, by 8 to 14 points.
 - **Given the same 5 examples inside its descriptions, Jev reaches 90.4%** (method B+, run on
   the first 249 messages only: [`results/first_249/REPORT.md`](results/first_249/REPORT.md)).
   With those exact examples the classifier scores 86.3% and cosine voting 77.1%. B+ sends about
-  3.7 times the input tokens.
+  3.7 times the input tokens. This is one draw of examples on 249 messages, so the lead over the
+  classifier is borderline: B+ alone got 16 messages right and the classifier alone got 6
+  (exact McNemar p = 0.05). The lead over cosine voting is clear.
 
 On messages built to be hard, the gap is much wider (no examples for A, D and Jev; 35 per
 category for C):
@@ -41,7 +44,9 @@ category for C):
 | [Hinglish](results/probe_hinglish.v1/REPORT.md) (same 144) | 47.9% | 56.2% | 63.7% | **85.4%** |
 | [Tanglish](results/probe_tanglish.v1/REPORT.md) (same 144) | 41.7% | 53.5% | 64.6% | **77.1%** |
 
-[`probes/README.md`](probes/README.md) explains how each probe set was built and checked.
+Claude agents wrote and checked the probe messages; [`probes/README.md`](probes/README.md)
+explains how. Read the trick-question row as a worst case for methods that match surface words,
+not as typical traffic.
 
 ## The question, in plain English
 
@@ -95,8 +100,11 @@ run it again and it resumes without paying twice for any message.
 
 **Is the free route really TypeSafe's Jev?** It is a third party, so the benchmark checks rather
 than trusts. `python -m app.main verify-route` replays six published TypeSafe answers through the
-configured route and compares token counts exactly, decisions exactly, and probabilities within
-0.05. The daily script repeats one of them as a drift canary before spending quota. See
+configured route. All six must give the same decisions with probabilities within 0.05. The two
+dated live recordings must also match token counts exactly (422/422 and 476/476). The four
+undated docs examples differ by 9 to 33 tokens, likely an older prompt template, so their counts
+are advisory. The daily script repeats one dated recording as a drift canary before spending
+quota. A match is strong evidence, not proof: see
 [`fingerprints/README.md`](fingerprints/README.md) for the evidence and its limits.
 
 Beware of lookalike "Jev API" sites and packages. The only official packages are PyPI
@@ -186,6 +194,8 @@ each method's answers, for error analysis.
 - One cross-encoder (`bge-reranker-v2-m3`, trained for search relevance, not classification).
   A 2026 zero-shot benchmark ([BTZSC](https://arxiv.org/abs/2603.11991)) found larger rerankers
   such as Qwen3-Reranker-8B do much better, so D is a lower bound for the approach.
+- Banking77 is public, so Jev and the embedding models may have seen it in training. Only the
+  trick-question probe is new text.
 - Jev results come from a free route. If you change the route, compare within one route,
   not across routes.
 - Jev latency depends heavily on distance to its US-hosted servers.
