@@ -41,6 +41,7 @@ from app.domain.metrics import summarize
 from app.domain.prediction import Prediction
 from app.domain.report_context import ReportContext
 from app.domain.route_check import RouteCheck
+from app.domain.triage_inputs import RunsPerSeed, TriageInputs
 from app.repositories.banking77_repository import Banking77Repository, fetch_https
 from app.repositories.intent_catalog_repository import load_intent_catalog
 from app.repositories.jev_decision_cache_repository import JevDecisionCacheRepository
@@ -63,11 +64,14 @@ from app.services.route_verification_service import RouteVerificationService
 from app.services.sampling import draw_example_pools, sample_test_set
 from app.services.token_budget import TokenBudget
 from app.services.trained_classifier_benchmark_service import TrainedClassifierBenchmarkService
+from app.services.triage_report_builder import build_triage_report
 from app.utils.printable_text import to_printable
 
 logger = logging.getLogger(__name__)
 
 _DESIGN: Final = ExperimentDesign()
+# The triage report's example sizes: where the classifier first matches Jev, and the most.
+_TRIAGE_EXAMPLES_PER_LABEL: Final = (5, 35)
 _EXIT_OK: Final = 0
 _EXIT_APP_ERROR: Final = 1
 _EXIT_CRASH: Final = 2
@@ -106,7 +110,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--max-cases", type=int, default=6, help="reference cases to replay (1 = daily canary)"
     )
     report = commands.add_parser("report", help="write REPORT.md and the chart")
-    for command in (cosine, jev, cross, trained, report):
+    triage = commands.add_parser(
+        "triage", help="write TRIAGE.md: confidence thresholds and cascades (calls no model)"
+    )
+    for command in (cosine, jev, cross, trained, report, triage):
         command.add_argument(
             "--limit",
             type=int,
@@ -497,6 +504,37 @@ def _report_context(
     )
 
 
+def _triage(settings: BenchmarkSettings, arguments: argparse.Namespace) -> int:
+    results = _results_for(settings, arguments)
+    jev = results.load_predictions("jev", BenchmarkMethod.JEV, examples_per_label=0, seed=None)
+    if not jev:
+        raise ConfigurationError("no Jev predictions here yet; run `run-jev` first")
+    inputs = TriageInputs(
+        jev=tuple(jev),
+        trained=_runs_per_seed(results, "trained_classifier", BenchmarkMethod.TRAINED_CLASSIFIER),
+        voting=_runs_per_seed(results, "cosine", BenchmarkMethod.COSINE_EXAMPLES),
+    )
+    sample_label = f"Probe {arguments.probe}" if arguments.probe else "Banking77 test sample"
+    report = build_triage_report(inputs, sample_label=sample_label)
+    print(f"wrote {results.write_text('TRIAGE.md', report)}")
+    return _EXIT_OK
+
+
+def _runs_per_seed(
+    results: ResultsRepository, name: str, method: BenchmarkMethod
+) -> dict[int, RunsPerSeed]:
+    runs: dict[int, RunsPerSeed] = {}
+    for per_label in _TRIAGE_EXAMPLES_PER_LABEL:
+        loaded = [
+            tuple(results.load_predictions(name, method, examples_per_label=per_label, seed=seed))
+            for seed in _DESIGN.example_pool_seeds
+        ]
+        if not all(loaded):
+            raise ConfigurationError(f"no {name} predictions at {per_label} examples here yet")
+        runs[per_label] = tuple(loaded)
+    return runs
+
+
 _COMMANDS: Final[dict[str, Command]] = {
     "download": _download,
     "run-cosine": _run_cosine,
@@ -505,6 +543,7 @@ _COMMANDS: Final[dict[str, Command]] = {
     "run-trained": _run_trained,
     "verify-route": _verify_route,
     "report": _report,
+    "triage": _triage,
 }
 
 
