@@ -49,5 +49,6 @@ unchanged and at least one judged it natural. All 144 passed in both languages.
   family. A 100% pass rate also means the checks may have been lenient.
 - A native-speaker spot check of the Hinglish and Tanglish rewrites would strengthen them.
   Corrections are welcome as a new version (`*.v2.jsonl`); never edit a released version.
-- The code-mixed sets reuse Banking77 content under CC BY 4.0 (PolyAI). The tricky set is new
-  text written for this benchmark.
+- The code-mixed sets and `english_source.v1` reuse Banking77 messages (PolyAI), rewritten or
+  quoted under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The tricky set is new
+  text written for this benchmark (MIT).

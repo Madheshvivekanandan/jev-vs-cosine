@@ -232,11 +232,21 @@ tests/unit/      pytest suite mirroring app/
 
 CI runs the same gates on every push and pull request (`.github/workflows/ci.yml`).
 
-## Data and credits
+[Banking77](https://github.com/PolyAI-LDN/task-specific-datasets) is by PolyAI, released under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): Iñigo Casanueva, Tadas Temčinas,
+Daniela Gerz, Matthew Henderson and Ivan Vulić, "Efficient Intent Detection with Dual Sentence
+Encoders", *Proceedings of the 2nd Workshop on Natural Language Processing for Conversational
+AI* (ACL 2020). This repo changes it: a seeded sample of 1,001 test messages, 7 training rows
+that duplicate a test message dropped, and 144 messages rewritten in Hinglish and Tanglish.
 
-[Banking77](https://github.com/PolyAI-LDN/task-specific-datasets) is by PolyAI (Casanueva et
-al., 2020), licensed CC BY 4.0. `results/predictions/` repeats test-split messages next to
-each method's answers, for error analysis.
+| Files | Contents | License |
+|---|---|---|
+| `results/**/predictions/`, `probes/english_source.v1.jsonl`, `probes/hinglish.v1.jsonl`, `probes/tanglish.v1.jsonl` | Banking77 messages, quoted or rewritten | CC BY 4.0 (PolyAI) |
+| `fingerprints/*.json` | Published Jev examples, each with its `source_url` | Their authors (TypeSafe, OpenRouter, OpenCode) |
+| Everything else: code, `prompts/`, `probes/tricky.v1.jsonl`, `.cache/`, results without message text | Written or produced for this repo | MIT |
+
+`requirements.lock` is a `pip freeze` of the macOS environment the published results came
+from; `pip install -r requirements.lock` reproduces it.
 
 ## Limitations
 
@@ -257,5 +267,6 @@ each method's answers, for error analysis.
 
 ## License
 
-Code: [MIT](LICENSE). The Banking77 data and the messages quoted in `results/predictions/`
-stay under PolyAI's CC BY 4.0.
+Code and everything written for this repo: [MIT](LICENSE). Files that quote or rewrite Banking77
+messages stay under PolyAI's [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the
+table under "Data, credits and licenses" lists them.

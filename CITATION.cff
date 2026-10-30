@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, please cite it as below. Please also cite Banking77 (Casanueva et al., 2020)."
+title: "jev-vs-cosine: TypeSafe Jev vs embedding similarity for intent routing on Banking77"
+authors:
+  - family-names: Vivekanandan
+    given-names: Madhesh
+repository-code: "https://github.com/Madheshvivekanandan/jev-vs-cosine"
+license: MIT
+keywords:
+  - intent classification
+  - Banking77
+  - embeddings
+  - code-mixed text
+  - TypeSafe Jev
+references:
+  - type: conference-paper
+    title: "Efficient Intent Detection with Dual Sentence Encoders"
+    authors:
+      - family-names: Casanueva
+        given-names: Iñigo
+      - family-names: Temčinas
+        given-names: Tadas
+      - family-names: Gerz
+        given-names: Daniela
+      - family-names: Henderson
+        given-names: Matthew
+      - family-names: Vulić
+        given-names: Ivan
+    collection-title: "Proceedings of the 2nd Workshop on Natural Language Processing for Conversational AI"
+    year: 2020
+    license: CC-BY-4.0
