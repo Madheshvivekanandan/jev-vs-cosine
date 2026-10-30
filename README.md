@@ -26,7 +26,8 @@ per IP per day, so the run resumed over several days
   together with each description, much as Jev reads a message with its options, yet on this
   English sample it scores 71.1%. That is no better than plain cosine and 12 points below Jev,
   at about the same time per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network
-  round trip). On the harder probe sets below it does beat cosine, by 8 to 14 points.
+  round trip). On the trick-question and code-mixed probes below it does beat cosine, by 8 to 14
+  points.
 - **Given the same 5 examples inside its descriptions, Jev reaches 90.4%** (method B+, run on
   the first 249 messages only: [`results/first_249/REPORT.md`](results/first_249/REPORT.md)).
   With those exact examples the classifier scores 86.3% and cosine voting 77.1%. B+ sends about
@@ -131,14 +132,22 @@ cp .env.example .env               # the default block is the free Jev route
 `run-jev` caches every answer as it goes. If a run stops (rate limit, daily cap, budget),
 run it again and it resumes without paying twice for any message.
 
-## Free ways to call Jev (checked 2026-09-24)
+## Ways to call Jev (checked 2026-10-30)
+
+You don't need any of them to check the results: every Jev answer is committed in
+`.cache/jev_decisions.jsonl`, so `report` and `triage` rebuild every number with no key and no
+calls. To run Jev yourself:
 
 | Route | Cost | Needs | Notes |
 |---|---|---|---|
-| **OpenCode Zen** `jev-1.13-free` (default) | $0 | nothing (anonymous) | Per-IP daily request cap, value unpublished, resets 00:00 UTC; "limited time" |
-| Vercel AI Gateway `typesafe-ai/jev` | $0 from the $5/month free credit | a credit card on file | Heavily throttled on the free tier; model id is unversioned |
-| TypeSafe direct `jev-1.13.0` | $5 signup credit | an existing console account | New signups paused since 2026-09-22 |
+| **OpenCode Zen** `jev-1.13-free` (default) | $0 | nothing (anonymous) | Per-IP daily request cap (about 250, unpublished), resets 00:00 UTC; offered for a "limited time". It refused direct API calls from about 2026-10-25 (`429 FreeUsageLimitError`), accepted them again from 2026-10-29, and passed the route check on 2026-10-30 |
+| Vercel AI Gateway `typesafe-ai/jev` | paid | purchased credits | Jev was not among the [free-tier models](https://vercel.com/ai-gateway/models?freeTier=true) when checked on 2026-10-27; model id is unversioned |
+| TypeSafe direct `jev-1.13.0` | paid | a console account | No published free tier; new signups paused since 2026-09-22 |
 | OpenRouter, Cloudflare | paid | credits | Not free for Jev |
+
+At TypeSafe's list price ($0.042 per million input tokens), Jev on all 1,001 messages costs
+about $0.10. A paid route is cached under its own route id, so its answers never mix with the
+ones committed here.
 
 **Is the free route really TypeSafe's Jev?** It is a third party, so the benchmark checks rather
 than trusts. `python -m app.main verify-route` replays six published TypeSafe answers through the
@@ -207,9 +216,25 @@ app/
   core/          settings, logging, run id
   main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev |
                  verify-route | report | triage
+  utils/         small text helpers
 prompts/         versioned category descriptions (the "prompt")
-results/         committed outputs: REPORT.md, chart, per-message predictions
+probes/          extra test sets: trick questions, Hinglish, Tanglish (see probes/README.md)
+fingerprints/    published TypeSafe answers that verify-route replays
+scripts/         run_jev_daily.sh: resumes Jev runs under the free route's daily cap
+results/         committed outputs (map below)
+.cache/          jev_decisions.jsonl: every Jev answer, so results rebuild with no calls
+.claude/skills/  the coding standard contributors' agents follow
 tests/unit/      pytest suite mirroring app/
+```
+
+```
+results/
+  REPORT.md, TRIAGE.md, *.json  the 1,001-message Banking77 sample, all methods
+  predictions/                  every method's answer to every message
+  probe_<name>/                 the same for each probe set
+  first_249/                    the first 249 messages, where B+ (Jev with examples) ran
+  embedder_bge-m3/              methods A, C and E re-run with a multilingual embedder
+  route_verification/           the evidence from each verify-route run
 ```
 
 ## Quality gates
@@ -221,13 +246,26 @@ tests/unit/      pytest suite mirroring app/
 .venv/bin/pip-audit --skip-editable
 ```
 
-CI runs the same gates on every push and pull request (`.github/workflows/ci.yml`).
+CI runs the same gates on every pull request and every push to `main`
+(`.github/workflows/ci.yml`).
 
-## Data and credits
+## Data, credits and licenses
 
-[Banking77](https://github.com/PolyAI-LDN/task-specific-datasets) is by PolyAI (Casanueva et
-al., 2020), licensed CC BY 4.0. `results/predictions/` repeats test-split messages next to
-each method's answers, for error analysis.
+[Banking77](https://github.com/PolyAI-LDN/task-specific-datasets) is by PolyAI, released under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): Iñigo Casanueva, Tadas Temčinas,
+Daniela Gerz, Matthew Henderson and Ivan Vulić, "Efficient Intent Detection with Dual Sentence
+Encoders", *Proceedings of the 2nd Workshop on Natural Language Processing for Conversational
+AI* (ACL 2020). This repo changes it: a seeded sample of 1,001 test messages, 7 training rows
+that duplicate a test message dropped, and 144 messages rewritten in Hinglish and Tanglish.
+
+| Files | Contents | License |
+|---|---|---|
+| `results/**/predictions/`, `probes/english_source.v1.jsonl`, `probes/hinglish.v1.jsonl`, `probes/tanglish.v1.jsonl` | Banking77 messages, quoted or rewritten | CC BY 4.0 (PolyAI) |
+| `fingerprints/*.json` | Published Jev examples, each with its `source_url` | Their authors (TypeSafe, OpenRouter, OpenCode) |
+| Everything else: code, `prompts/`, `probes/tricky.v1.jsonl`, `.cache/`, results without message text | Written or produced for this repo | MIT |
+
+`requirements.lock` is a `pip freeze` of the macOS environment the published results came
+from; `pip install -r requirements.lock` reproduces it.
 
 ## Limitations
 
@@ -244,9 +282,10 @@ each method's answers, for error analysis.
   trick-question probe is new text.
 - Jev results come from a free route. If you change the route, compare within one route,
   not across routes.
-- Jev latency depends heavily on distance to its US-hosted servers.
+- Jev latency was measured from one laptop in India and depends on network distance.
 
 ## License
 
-Code: [MIT](LICENSE). The Banking77 data and the messages quoted in `results/predictions/`
-stay under PolyAI's CC BY 4.0.
+Code and everything written for this repo: [MIT](LICENSE). Files that quote or rewrite Banking77
+messages stay under PolyAI's [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the
+table under "Data, credits and licenses" lists them.

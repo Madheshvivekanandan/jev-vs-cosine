@@ -1,6 +1,6 @@
 # Results: Jev vs cosine similarity on Banking77
 
-_Jev (method B) has not been run yet; only the cosine methods are shown._
+_This result set has no Jev (method B) run; only the methods run here are shown._
 
 A classifier trained on the same past examples (method E) reaches **65.5%** with 35 per category.
 
@@ -14,11 +14,11 @@ A classifier trained on the same past examples (method E) reaches **65.5%** with
 | C · cosine vs past examples (top-5 vote) | 10 | 60.4% (range 58.3%–61.8% over 3 draws) | 47 ms | 55 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 20 | 65.5% (range 63.2%–67.4% over 3 draws) | 47 ms | 55 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 35 | 67.6% (range 65.3%–69.4% over 3 draws) | 47 ms | 55 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 1 | 46.8% (range 44.4%–50.7% over 3 draws) | 49 ms | 59 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 5 | 58.6% (range 56.9%–61.8% over 3 draws) | 49 ms | 59 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 10 | 61.1% (range 58.3%–63.2% over 3 draws) | 49 ms | 59 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 20 | 62.7% (range 61.8%–63.2% over 3 draws) | 49 ms | 59 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 35 | 65.5% (range 63.9%–67.4% over 3 draws) | 49 ms | 59 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 1 | 46.8% (range 44.4%–50.7% over 3 draws) | 43 ms | 50 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 5 | 58.6% (range 56.9%–61.8% over 3 draws) | 43 ms | 50 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 10 | 61.1% (range 58.3%–63.2% over 3 draws) | 43 ms | 50 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 20 | 62.7% (range 61.8%–63.2% over 3 draws) | 43 ms | 50 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 35 | 65.5% (range 63.9%–67.4% over 3 draws) | 43 ms | 50 ms | 0 | $0.0000 |
 
 ## How to read this
 

@@ -3,7 +3,7 @@
 Provenance for [`../SKILL.md`](../SKILL.md). This file is deliberately kept
 out of the skill body so it costs no tokens at load time; read it to verify a
 rule, not to follow one. Repository-wide provenance tiers and known gaps:
-[SOURCES.md](../../../SOURCES.md).
+[SOURCES.md](https://github.com/Madheshvivekanandan/ai-engineering-skills/blob/main/SOURCES.md).
 
 Throughout this file, "this document" and section references like §4 point to
 `../SKILL.md`, whose rules these sources support. This text was moved out of that

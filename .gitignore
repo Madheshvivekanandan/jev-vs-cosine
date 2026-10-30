@@ -20,5 +20,9 @@ data/
 .cache/*
 !.cache/jev_decisions.jsonl
 
-# Claude Code per-user settings
+# Claude Code per-user settings and session worktrees
 .claude/settings.local.json
+.claude/worktrees/
+
+# OS clutter
+.DS_Store

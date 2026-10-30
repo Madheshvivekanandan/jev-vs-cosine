@@ -128,7 +128,7 @@ def _headline(
     aggregates: Sequence[SeedAggregate],
 ) -> str:
     if jev_result is None:
-        return "_Jev (method B) has not been run yet; only the cosine methods are shown._"
+        return "_This result set has no Jev (method B) run; only the methods run here are shown._"
     if jev_result.accuracy <= description.accuracy:
         return (
             f"**With no examples, cosine vs descriptions already matches or beats Jev "
