@@ -5,13 +5,18 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class Prediction:
-    """A method's guess for a test message, with what it cost to produce."""
+    """A method's guess for a test message, with what it cost to produce.
+
+    `confidence` is the method's own probability for its guess, when it reports one
+    (Jev and the trained classifier do; the cosine and cross-encoder methods do not).
+    """
 
     text: str
     true_label: str
     predicted_label: str
     latency_ms: float
     input_tokens: int = 0
+    confidence: float | None = None
 
     @property
     def is_correct(self) -> bool:

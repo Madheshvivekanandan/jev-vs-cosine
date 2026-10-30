@@ -8,6 +8,6 @@ from app.services.vector_types import FloatMatrix
 class FittedClassifier(Protocol):
     """A model already trained on labelled embeddings."""
 
-    def predict(self, vectors: FloatMatrix) -> list[str]:
-        """Return one predicted label per row."""
+    def predict(self, vectors: FloatMatrix) -> list[tuple[str, float]]:
+        """Return one (predicted label, the model's probability for it) pair per row."""
         ...

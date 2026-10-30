@@ -33,6 +33,7 @@ def test_run_predicts_every_message_and_records_tokens(
     predictions = service.run(catalog, test_set, route_id="host/m")
 
     assert [p.is_correct for p in predictions] == [True, True, True]
+    assert [p.confidence for p in predictions] == [0.9, 0.9, 0.9]
     assert budget.spent_tokens == 300
 
 

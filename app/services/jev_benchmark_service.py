@@ -167,4 +167,5 @@ def _to_prediction(
         predicted_label=decision.choice,
         latency_ms=decision.latency_ms,
         input_tokens=charged_tokens,
+        confidence=decision.confidence,
     )
