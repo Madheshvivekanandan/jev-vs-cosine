@@ -72,7 +72,7 @@ def test_report_without_jev_says_so() -> None:
         BenchmarkResults(_cosine_results(), jev=None), _context(jev_route=None, jev_catalog=None)
     )
 
-    assert "has not been run yet" in report
+    assert "has no Jev (method B) run" in report
     assert "| B · Jev |" not in report
     assert "Jev: not run" in report
 
