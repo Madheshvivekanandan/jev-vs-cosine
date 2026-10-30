@@ -48,6 +48,35 @@ Claude agents wrote and checked the probe messages; [`probes/README.md`](probes/
 explains how. Read the trick-question row as a worst case for methods that match surface words,
 not as typical traffic.
 
+### When to trust an answer, and when to ask Jev
+
+`python -m app.main triage` replays the saved predictions, so it calls no model
+([`results/TRIAGE.md`](results/TRIAGE.md), plus one in each probe folder):
+
+- **Jev's confidence works as a gate.** On the English sample, the 51% of answers where Jev
+  reports confidence 1.0 are 98.0% right. At 0.95 or above, 71% of answers are 93.8% right, and
+  44 of Jev's 167 mistakes still pass.
+- **So does the classifier's own probability.** With 35 examples per category, its answers at
+  0.9 or above cover 67% of English messages at 99.1%. On Hinglish and Tanglish only about 43%
+  of its answers reach even 0.5, so it signals when it is lost.
+- **Cheap first, Jev only when needed.** Accuracy, and the share of messages sent to Jev, with
+  35 examples per category:
+
+| Strategy | English | Hinglish | Tanglish | Trick questions |
+|---|---|---|---|---|
+| Jev alone | 83.3% (all) | **85.4%** (all) | 77.1% (all) | **100.0%** (all) |
+| Classifier alone | 91.3% (none) | 56.2% (none) | 52.8% (none) | 64.1% (none) |
+| Keep the answer when cosine voting and the classifier agree, else Jev | **92.5%** (7%) | 80.3% (35%) | 75.9% (39%) | 82.9% (30%) |
+| Keep the classifier's answer at confidence 0.7 or above, else Jev | 91.6% (16%) | 84.5% (73%) | **78.7%** (75%) | 91.7% (54%) |
+
+The agreement rule is best on English but fails on code-mixed and trick messages, because
+cosine voting and the classifier share one English embedding model and agree on the same wrong
+answers. The confidence rule adapts to the traffic: it sends Jev about 1 in 6 English messages
+and about 3 in 4 code-mixed ones, and is never more than a point below the better single
+method on English, Hinglish or Tanglish. On trick questions it reaches 91.7%, because the classifier is
+confidently wrong on some traps. The thresholds come from a fixed grid in the code, not tuned
+on these results; `TRIAGE.md` also shows 0.9 and 0.5.
+
 ## The question, in plain English
 
 A bank's support inbox gets a message like *"I paid at the supermarket and it said
@@ -84,6 +113,7 @@ cp .env.example .env               # the default block is the free Jev route
 .venv/bin/python -m app.main run-jev --limit 20             # pilot
 .venv/bin/python -m app.main run-jev                        # all 1,001 test messages
 .venv/bin/python -m app.main report         # results/REPORT.md + the chart
+.venv/bin/python -m app.main triage         # results/TRIAGE.md: thresholds and cascades, no calls
 ```
 
 `run-jev` caches every answer as it goes. If a run stops (rate limit, daily cap, budget),
@@ -158,12 +188,13 @@ against an allow-list so a key can't be sent to a typo or a reseller.
 app/
   domain/        pure types and scoring (stdlib only): metrics, catalog, results
   services/      use cases: sampling, cosine voting, cross-encoder, trained classifier, Jev
-                 runner, budget, report, chart
+                 runner, budget, report, chart, triage
   services/ports Protocols (Embedder, PairScorer, ClassifierTrainer, JevDecider)
   repositories/  dataset files, prompt catalog, Jev answer cache, results
   clients/       adapters: TypeSafe SDK, sentence-transformers, scikit-learn
   core/          settings, logging, run id
-  main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev | report
+  main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev |
+                 verify-route | report | triage
 prompts/         versioned category descriptions (the "prompt")
 results/         committed outputs: REPORT.md, chart, per-message predictions
 tests/unit/      pytest suite mirroring app/
