@@ -132,14 +132,22 @@ cp .env.example .env               # the default block is the free Jev route
 `run-jev` caches every answer as it goes. If a run stops (rate limit, daily cap, budget),
 run it again and it resumes without paying twice for any message.
 
-## Free ways to call Jev (checked 2026-09-24)
+## Ways to call Jev (checked 2026-10-30)
+
+You don't need any of them to check the results: every Jev answer is committed in
+`.cache/jev_decisions.jsonl`, so `report` and `triage` rebuild every number with no key and no
+calls. To run Jev yourself:
 
 | Route | Cost | Needs | Notes |
 |---|---|---|---|
-| **OpenCode Zen** `jev-1.13-free` (default) | $0 | nothing (anonymous) | Per-IP daily request cap, value unpublished, resets 00:00 UTC; "limited time" |
-| Vercel AI Gateway `typesafe-ai/jev` | $0 from the $5/month free credit | a credit card on file | Heavily throttled on the free tier; model id is unversioned |
-| TypeSafe direct `jev-1.13.0` | $5 signup credit | an existing console account | New signups paused since 2026-09-22 |
+| **OpenCode Zen** `jev-1.13-free` (default) | $0 | nothing (anonymous) | Per-IP daily request cap (about 250, unpublished), resets 00:00 UTC; offered for a "limited time". It refused direct API calls from about 2026-10-25 (`429 FreeUsageLimitError`), accepted them again from 2026-10-29, and passed the route check on 2026-10-30 |
+| Vercel AI Gateway `typesafe-ai/jev` | paid | purchased credits | Jev was not among the [free-tier models](https://vercel.com/ai-gateway/models?freeTier=true) when checked on 2026-10-27; model id is unversioned |
+| TypeSafe direct `jev-1.13.0` | paid | a console account | No published free tier; new signups paused since 2026-09-22 |
 | OpenRouter, Cloudflare | paid | credits | Not free for Jev |
+
+At TypeSafe's list price ($0.042 per million input tokens), Jev on all 1,001 messages costs
+about $0.10. A paid route is cached under its own route id, so its answers never mix with the
+ones committed here.
 
 **Is the free route really TypeSafe's Jev?** It is a third party, so the benchmark checks rather
 than trusts. `python -m app.main verify-route` replays six published TypeSafe answers through the

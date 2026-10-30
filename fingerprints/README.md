@@ -18,10 +18,12 @@ before spending that day's quota.
 
 | Case | Source | Reference tokens |
 |---|---|---|
-| `opencode_recording_bridge` | OpenCode's own live recording of TypeSafe direct (`jev-1.13.0`), 2026-09-22 | 422 |
-| `typesafe_quickstart` | docs.typesafe.ai quickstart | 392 |
-| `openrouter_tutorial` | OpenRouter's Jev tutorial (TypeSafe as provider) | 476 |
-| `typesafe_docs_choice` / `_noul` / `_score` | docs.typesafe.ai primitive pages | 328 / 360 / 332 |
+| `opencode_recording_bridge` | OpenCode's own [live recording](https://github.com/anomalyco/opencode/blob/07d48e1ffb4ec5fa4f48fe06e931506a7fc47ab8/packages/ai/test/fixtures/recordings/typesafe-evaluation/evaluates-choice-score-and-boolean-questions.json) of TypeSafe direct (`jev-1.13.0`), 2026-09-22 | 422 |
+| `typesafe_quickstart` | docs.typesafe.ai [quickstart](https://docs.typesafe.ai/introduction/quickstart.md) | 392 |
+| `openrouter_tutorial` | OpenRouter's [Jev tutorial](https://openrouter.ai/docs/guides/community/jev-tutorial.md) (TypeSafe as provider) | 476 |
+| `typesafe_docs_choice` / `_noul` / `_score` | docs.typesafe.ai primitive pages: [Choice](https://docs.typesafe.ai/primitives/choice.md), [Noul](https://docs.typesafe.ai/primitives/noul.md), [Score](https://docs.typesafe.ai/primitives/score.md) | 328 / 360 / 332 |
+
+Each example belongs to its publisher; it is copied here only so the check can replay it.
 
 ## First live check (2026-09-25)
 
@@ -45,6 +47,9 @@ decisions and probabilities for all six. Under v2 this run passes 6 of 6. The ru
 records `matches: false` for the four docs cases under the v1 rule, unchanged.
 
 ## What a match does and does not prove
+
+The daily one-case canary (the 422-token recording) matched on every run day from 2026-09-25
+to 2026-10-30; each run's evidence is in `results/route_verification/`.
 
 A match is strong evidence that the route serves the same model with the same prompt
 template. It cannot rule out an exact copy of the weights served by someone else. What we
