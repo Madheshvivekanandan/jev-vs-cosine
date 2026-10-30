@@ -89,8 +89,9 @@ class TrainedClassifierBenchmarkService:
                 true_label=message.label,
                 predicted_label=guess,
                 latency_ms=embed_ms + predict_ms,
+                confidence=confidence,
             )
-            for message, guess, embed_ms in zip(
+            for message, (guess, confidence), embed_ms in zip(
                 embedded.messages, guesses, embedded.embed_latencies_ms, strict=True
             )
         )

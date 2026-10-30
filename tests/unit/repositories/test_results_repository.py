@@ -97,3 +97,38 @@ def test_invalid_metadata_raises(tmp_path: Path) -> None:
 
     with pytest.raises(DatasetError, match="metadata"):
         ResultsRepository(tmp_path).load_metadata("jev")
+
+
+def test_load_predictions_round_trips_confidence_only_where_reported(tmp_path: Path) -> None:
+    repository = ResultsRepository(tmp_path)
+    scored = Prediction("hi", "a", "a", 5.0, confidence=0.875)
+    jev = make_result(BenchmarkMethod.JEV, examples_per_label=0, seed=None)
+    repository.save_runs("jev", [MethodRun(jev, (scored,))])
+    repository.save_runs("cosine", [_run(seed=1)])
+
+    loaded = repository.load_predictions(
+        "jev", BenchmarkMethod.JEV, examples_per_label=0, seed=None
+    )
+    plain_line = (tmp_path / "predictions/cosine/C_cosine_examples_k5_seed1.jsonl").read_text()
+
+    assert loaded == [scored]
+    assert "confidence" not in json.loads(plain_line)
+
+
+def test_load_predictions_when_never_saved_is_empty(tmp_path: Path) -> None:
+    loaded = ResultsRepository(tmp_path).load_predictions(
+        "jev", BenchmarkMethod.JEV, examples_per_label=0, seed=None
+    )
+
+    assert loaded == []
+
+
+def test_load_predictions_rejects_a_malformed_line(tmp_path: Path) -> None:
+    path = tmp_path / "predictions/jev/B_jev_k0.jsonl"
+    path.parent.mkdir(parents=True)
+    path.write_text('{"text": "hi"}\n')
+
+    with pytest.raises(DatasetError, match="not a valid predictions file"):
+        ResultsRepository(tmp_path).load_predictions(
+            "jev", BenchmarkMethod.JEV, examples_per_label=0, seed=None
+        )

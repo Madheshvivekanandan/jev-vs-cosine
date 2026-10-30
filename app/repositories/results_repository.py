@@ -13,6 +13,7 @@ from app.domain.benchmark_method import BenchmarkMethod
 from app.domain.errors.dataset_error import DatasetError
 from app.domain.method_result import MethodResult
 from app.domain.method_run import MethodRun
+from app.domain.prediction import Prediction
 
 _RESULT_SET_NAME: Final = re.compile(r"^[a-z][a-z0-9_]*$")
 _METADATA: Final = TypeAdapter(dict[str, str])
@@ -35,6 +36,20 @@ class _MethodResultRecord(BaseModel):
     p95_latency_ms: float
     input_tokens: int
     list_price_cost_usd: Decimal
+
+
+class _PredictionRecord(BaseModel):
+    """JSON shape of one saved Prediction (one line of a predictions file)."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    text: str
+    true_label: str
+    predicted_label: str
+    is_correct: bool
+    latency_ms: float
+    input_tokens: int
+    confidence: float | None = None
 
 
 class ResultsRepository:
@@ -113,25 +128,60 @@ class ResultsRepository:
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
 
+    def load_predictions(
+        self,
+        name: str,
+        method: BenchmarkMethod,
+        *,
+        examples_per_label: int,
+        seed: int | None,
+    ) -> list[Prediction]:
+        """Return the saved per-message predictions of one run, or [] if never saved.
+
+        Raises:
+            DatasetError: If the file exists but a line is not a valid prediction.
+        """
+        path = self.path_for(_predictions_filename(name, method, examples_per_label, seed))
+        if not path.exists():
+            return []
+        try:
+            records = [
+                _PredictionRecord.model_validate_json(line)
+                for line in path.read_text(encoding="utf-8").splitlines()
+            ]
+        except ValidationError as exc:
+            raise DatasetError(f"{path} is not a valid predictions file") from exc
+        return [Prediction(**record.model_dump(exclude={"is_correct"})) for record in records]
+
     def _save_predictions(self, name: str, run: MethodRun) -> None:
         result = run.result
-        seed_part = f"_seed{result.seed}" if result.seed is not None else ""
-        filename = f"predictions/{name}/{result.method.value}_k{result.examples_per_label}{seed_part}.jsonl"
-        lines = [
-            json.dumps(
-                {
-                    "text": p.text,
-                    "true_label": p.true_label,
-                    "predicted_label": p.predicted_label,
-                    "is_correct": p.is_correct,
-                    "latency_ms": round(p.latency_ms, 3),
-                    "input_tokens": p.input_tokens,
-                },
-                sort_keys=True,
-            )
-            for p in run.predictions
-        ]
+        filename = _predictions_filename(
+            name, result.method, result.examples_per_label, result.seed
+        )
+        lines = [json.dumps(_prediction_record(p), sort_keys=True) for p in run.predictions]
         self.path_for(filename).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _predictions_filename(
+    name: str, method: BenchmarkMethod, examples_per_label: int, seed: int | None
+) -> str:
+    seed_part = f"_seed{seed}" if seed is not None else ""
+    return f"predictions/{_checked(name)}/{method.value}_k{examples_per_label}{seed_part}.jsonl"
+
+
+def _prediction_record(prediction: Prediction) -> dict[str, object]:
+    record: dict[str, object] = {
+        "text": prediction.text,
+        "true_label": prediction.true_label,
+        "predicted_label": prediction.predicted_label,
+        "is_correct": prediction.is_correct,
+        "latency_ms": round(prediction.latency_ms, 3),
+        "input_tokens": prediction.input_tokens,
+    }
+    # Only methods that report a confidence get the key, so the other files stay unchanged.
+    if prediction.confidence is not None:
+        record["confidence"] = round(prediction.confidence, 6)
+    return record
 
 
 def _checked(name: str) -> str:

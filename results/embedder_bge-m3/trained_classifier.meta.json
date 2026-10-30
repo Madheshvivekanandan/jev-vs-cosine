@@ -1,0 +1,5 @@
+{
+  "classifier": "scikit-learn LogisticRegression(C=100, max_iter=5000)",
+  "embedding_model": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181",
+  "train_duplicates_removed": "7"
+}

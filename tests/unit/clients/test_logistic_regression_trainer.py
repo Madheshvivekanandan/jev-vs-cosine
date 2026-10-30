@@ -13,7 +13,10 @@ def test_fit_then_predict_separable_labels() -> None:
     vectors = _vectors([[1, 0], [0.9, 0.1], [0, 1], [0.1, 0.9]])
     model = LogisticRegressionTrainer().fit(vectors, ["a", "a", "b", "b"])
 
-    assert model.predict(_vectors([[0.95, 0.05], [0.05, 0.95]])) == ["a", "b"]
+    guesses = model.predict(_vectors([[0.95, 0.05], [0.05, 0.95]]))
+
+    assert [label for label, _ in guesses] == ["a", "b"]
+    assert all(0.5 < confidence <= 1.0 for _, confidence in guesses)
 
 
 def test_fit_with_one_example_per_label_does_not_warn() -> None:
@@ -21,7 +24,7 @@ def test_fit_with_one_example_per_label_does_not_warn() -> None:
     # "unique classes" warning escapes the adapter.
     model = LogisticRegressionTrainer().fit(_vectors([[1, 0], [0, 1]]), ["a", "b"])
 
-    assert model.predict(_vectors([[1, 0]])) == ["a"]
+    assert [label for label, _ in model.predict(_vectors([[1, 0]]))] == ["a"]
 
 
 def test_fit_with_a_single_label_raises() -> None:

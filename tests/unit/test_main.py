@@ -8,6 +8,7 @@ from app.domain.benchmark_inputs import BenchmarkInputs
 from app.domain.benchmark_method import BenchmarkMethod
 from app.domain.errors.configuration_error import ConfigurationError
 from app.domain.method_run import MethodRun
+from app.domain.prediction import Prediction
 from app.repositories.results_repository import ResultsRepository
 from tests.conftest import make_catalog, make_result
 
@@ -203,3 +204,53 @@ def test_verify_route_saves_evidence_and_fails_on_mismatch(
     assert cli.main(["verify-route", "--max-cases", "1"]) == exit_code
     evidence = list((tmp_path / "results" / "route_verification").glob("*.json"))
     assert len(evidence) == 1
+
+
+def _save_scored_runs(repository: ResultsRepository) -> None:
+    scored = (Prediction("m", "a", "a", 1.0, confidence=0.97),)
+    jev = make_result(BenchmarkMethod.JEV, examples_per_label=0, seed=None)
+    repository.save_runs("jev", [MethodRun(jev, scored)])
+    for name, method in (
+        ("trained_classifier", BenchmarkMethod.TRAINED_CLASSIFIER),
+        ("cosine", BenchmarkMethod.COSINE_EXAMPLES),
+    ):
+        runs = [
+            MethodRun(make_result(method, examples_per_label=k, seed=seed), scored)
+            for k in (5, 35)
+            for seed in (1, 2, 3)
+        ]
+        repository.save_runs(name, runs)
+
+
+def test_main_triage_writes_the_triage_report(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _use_settings(monkeypatch, tmp_path)
+    _save_scored_runs(ResultsRepository(tmp_path / "results" / "probe_x.v1"))
+
+    exit_code = cli.main(["triage", "--probe", "x.v1"])
+
+    report = (tmp_path / "results" / "probe_x.v1" / "TRIAGE.md").read_text()
+    assert exit_code == 0
+    assert "Probe x.v1: 1 messages" in report
+
+
+def test_main_triage_without_jev_predictions_fails_cleanly(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _use_settings(monkeypatch, tmp_path)
+
+    assert cli.main(["triage"]) == 1
+    assert "run-jev" in capsys.readouterr().err
+
+
+def test_main_triage_without_classifier_predictions_fails_cleanly(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _use_settings(monkeypatch, tmp_path)
+    jev = make_result(BenchmarkMethod.JEV, examples_per_label=0, seed=None)
+    scored = (Prediction("m", "a", "a", 1.0, confidence=0.97),)
+    ResultsRepository(tmp_path / "results").save_runs("jev", [MethodRun(jev, scored)])
+
+    assert cli.main(["triage"]) == 1
+    assert "trained_classifier predictions at 5 examples" in capsys.readouterr().err

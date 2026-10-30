@@ -22,9 +22,14 @@ class _FittedLogisticRegression:
     def __init__(self, model: LogisticRegression) -> None:
         self._model = model
 
-    def predict(self, vectors: FloatMatrix) -> list[str]:
-        """Return one predicted label per row."""
-        return [str(label) for label in self._model.predict(vectors)]
+    def predict(self, vectors: FloatMatrix) -> list[tuple[str, float]]:
+        """Return one (predicted label, its probability) pair per row."""
+        probabilities = self._model.predict_proba(vectors)
+        best = probabilities.argmax(axis=1)
+        return [
+            (str(self._model.classes_[column]), float(row[column]))
+            for row, column in zip(probabilities, best, strict=True)
+        ]
 
 
 class LogisticRegressionTrainer:

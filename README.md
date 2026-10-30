@@ -23,13 +23,16 @@ per IP per day, so the run resumed over several days
   91% with 35.
 - **One example per category (63%) does worse than a one-line description (73%).**
 - **A cross-encoder reranker doesn't close the gap.** `bge-reranker-v2-m3` reads each message
-  together with each description, much as Jev reads a message with its options, yet it scores
-  71.1%. That is no better than plain cosine and 12 points below Jev, at about the same time
-  per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network round trip).
+  together with each description, much as Jev reads a message with its options, yet on this
+  English sample it scores 71.1%. That is no better than plain cosine and 12 points below Jev,
+  at about the same time per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network
+  round trip). On the harder probe sets below it does beat cosine, by 8 to 14 points.
 - **Given the same 5 examples inside its descriptions, Jev reaches 90.4%** (method B+, run on
   the first 249 messages only: [`results/first_249/REPORT.md`](results/first_249/REPORT.md)).
   With those exact examples the classifier scores 86.3% and cosine voting 77.1%. B+ sends about
-  3.7 times the input tokens.
+  3.7 times the input tokens. This is one draw of examples on 249 messages, so the lead over the
+  classifier is borderline: B+ alone got 16 messages right and the classifier alone got 6
+  (exact McNemar p = 0.05). The lead over cosine voting is clear.
 
 On messages built to be hard, the gap is much wider (no examples for A, D and Jev; 35 per
 category for C):
@@ -41,7 +44,50 @@ category for C):
 | [Hinglish](results/probe_hinglish.v1/REPORT.md) (same 144) | 47.9% | 56.2% | 63.7% | **85.4%** |
 | [Tanglish](results/probe_tanglish.v1/REPORT.md) (same 144) | 41.7% | 53.5% | 64.6% | **77.1%** |
 
-[`probes/README.md`](probes/README.md) explains how each probe set was built and checked.
+Claude agents wrote and checked the probe messages; [`probes/README.md`](probes/README.md)
+explains how. Read the trick-question row as a worst case for methods that match surface words,
+not as typical traffic.
+
+**Is it just the English-only embedder?** Methods A, C and E embed text with
+`bge-small-en-v1.5`, which is English-only. Re-running them with the multilingual `bge-m3`,
+about 17 times larger ([`results/embedder_bge-m3/`](results/embedder_bge-m3/README.md)),
+narrows the gap but does not close it. Best of C and E with 35 examples per category:
+
+| Probe | `bge-small-en` | `bge-m3` (multilingual) | Jev, no examples |
+|---|---|---|---|
+| English originals (144) | 93.8% | 93.8% | 86.1% |
+| Hinglish (144) | 63.7% | 69.9% | **85.4%** |
+| Tanglish (144) | 64.6% | 67.6% | **77.1%** |
+| Trick questions (105) | 64.1% | 76.5% | **100.0%** |
+
+### When to trust an answer, and when to ask Jev
+
+`python -m app.main triage` replays the saved predictions, so it calls no model
+([`results/TRIAGE.md`](results/TRIAGE.md), plus one in each probe folder):
+
+- **Jev's confidence works as a gate.** On the English sample, the 51% of answers where Jev
+  reports confidence 1.0 are 98.0% right. At 0.95 or above, 71% of answers are 93.8% right, and
+  44 of Jev's 167 mistakes still pass.
+- **So does the classifier's own probability.** With 35 examples per category, its answers at
+  0.9 or above cover 67% of English messages at 99.1%. On Hinglish and Tanglish only about 43%
+  of its answers reach even 0.5, so it signals when it is lost.
+- **Cheap first, Jev only when needed.** Accuracy, and the share of messages sent to Jev, with
+  35 examples per category:
+
+| Strategy | English | Hinglish | Tanglish | Trick questions |
+|---|---|---|---|---|
+| Jev alone | 83.3% (all) | **85.4%** (all) | 77.1% (all) | **100.0%** (all) |
+| Classifier alone | 91.3% (none) | 56.2% (none) | 52.8% (none) | 64.1% (none) |
+| Keep the answer when cosine voting and the classifier agree, else Jev | **92.5%** (7%) | 80.3% (35%) | 75.9% (39%) | 82.9% (30%) |
+| Keep the classifier's answer at confidence 0.7 or above, else Jev | 91.6% (16%) | 84.5% (73%) | **78.7%** (75%) | 91.7% (54%) |
+
+The agreement rule is best on English but fails on code-mixed and trick messages, because
+cosine voting and the classifier share one English embedding model and agree on the same wrong
+answers. The confidence rule adapts to the traffic: it sends Jev about 1 in 6 English messages
+and about 3 in 4 code-mixed ones, and is never more than a point below the better single
+method on English, Hinglish or Tanglish. On trick questions it reaches 91.7%, because the classifier is
+confidently wrong on some traps. The thresholds come from a fixed grid in the code, not tuned
+on these results; `TRIAGE.md` also shows 0.9 and 0.5.
 
 ## The question, in plain English
 
@@ -79,6 +125,7 @@ cp .env.example .env               # the default block is the free Jev route
 .venv/bin/python -m app.main run-jev --limit 20             # pilot
 .venv/bin/python -m app.main run-jev                        # all 1,001 test messages
 .venv/bin/python -m app.main report         # results/REPORT.md + the chart
+.venv/bin/python -m app.main triage         # results/TRIAGE.md: thresholds and cascades, no calls
 ```
 
 `run-jev` caches every answer as it goes. If a run stops (rate limit, daily cap, budget),
@@ -95,8 +142,11 @@ run it again and it resumes without paying twice for any message.
 
 **Is the free route really TypeSafe's Jev?** It is a third party, so the benchmark checks rather
 than trusts. `python -m app.main verify-route` replays six published TypeSafe answers through the
-configured route and compares token counts exactly, decisions exactly, and probabilities within
-0.05. The daily script repeats one of them as a drift canary before spending quota. See
+configured route. All six must give the same decisions with probabilities within 0.05. The two
+dated live recordings must also match token counts exactly (422/422 and 476/476). The four
+undated docs examples differ by 9 to 33 tokens, likely an older prompt template, so their counts
+are advisory. The daily script repeats one dated recording as a drift canary before spending
+quota. A match is strong evidence, not proof: see
 [`fingerprints/README.md`](fingerprints/README.md) for the evidence and its limits.
 
 Beware of lookalike "Jev API" sites and packages. The only official packages are PyPI
@@ -150,12 +200,13 @@ against an allow-list so a key can't be sent to a typo or a reseller.
 app/
   domain/        pure types and scoring (stdlib only): metrics, catalog, results
   services/      use cases: sampling, cosine voting, cross-encoder, trained classifier, Jev
-                 runner, budget, report, chart
+                 runner, budget, report, chart, triage
   services/ports Protocols (Embedder, PairScorer, ClassifierTrainer, JevDecider)
   repositories/  dataset files, prompt catalog, Jev answer cache, results
   clients/       adapters: TypeSafe SDK, sentence-transformers, scikit-learn
   core/          settings, logging, run id
-  main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev | report
+  main.py        CLI: download | run-cosine | run-cross-encoder | run-trained | run-jev |
+                 verify-route | report | triage
 prompts/         versioned category descriptions (the "prompt")
 results/         committed outputs: REPORT.md, chart, per-message predictions
 tests/unit/      pytest suite mirroring app/
@@ -182,10 +233,15 @@ each method's answers, for error analysis.
 
 - One dataset (English banking intents, mostly topic-like categories, where cosine is
   strong). Judgement-heavy tasks may look very different.
-- One embedding model (`bge-small`, chosen for speed on a laptop). Larger ones may score higher.
+- One main embedding model (`bge-small-en-v1.5`, English-only, chosen for speed on a laptop).
+  The multilingual `bge-m3` was also run for methods A, C and E
+  ([`results/embedder_bge-m3/`](results/embedder_bge-m3/README.md)); other models may score
+  higher.
 - One cross-encoder (`bge-reranker-v2-m3`, trained for search relevance, not classification).
   A 2026 zero-shot benchmark ([BTZSC](https://arxiv.org/abs/2603.11991)) found larger rerankers
   such as Qwen3-Reranker-8B do much better, so D is a lower bound for the approach.
+- Banking77 is public, so Jev and the embedding models may have seen it in training. Only the
+  trick-question probe is new text.
 - Jev results come from a free route. If you change the route, compare within one route,
   not across routes.
 - Jev latency depends heavily on distance to its US-hosted servers.

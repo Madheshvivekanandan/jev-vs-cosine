@@ -16,8 +16,8 @@ class _NearestKeywordClassifier:
     def __init__(self, labels_by_column: dict[int, str]) -> None:
         self._labels_by_column = labels_by_column
 
-    def predict(self, vectors: FloatMatrix) -> list[str]:
-        return [self._labels_by_column[int(row.argmax())] for row in vectors]
+    def predict(self, vectors: FloatMatrix) -> list[tuple[str, float]]:
+        return [(self._labels_by_column[int(row.argmax())], float(row.max())) for row in vectors]
 
 
 class _RecordingTrainer:
@@ -50,3 +50,4 @@ def test_run_trains_once_per_seed_and_size_on_nested_pools() -> None:
     ]
     assert all(r.result.method is BenchmarkMethod.TRAINED_CLASSIFIER for r in runs)
     assert all(r.result.accuracy == 1.0 for r in runs)
+    assert {p.confidence for r in runs for p in r.predictions} == {1.0}
