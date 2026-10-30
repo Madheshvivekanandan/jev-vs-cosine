@@ -26,7 +26,8 @@ per IP per day, so the run resumed over several days
   together with each description, much as Jev reads a message with its options, yet on this
   English sample it scores 71.1%. That is no better than plain cosine and 12 points below Jev,
   at about the same time per message (0.8 s on a laptop CPU, against 0.76 s for Jev's network
-  round trip). On the harder probe sets below it does beat cosine, by 8 to 14 points.
+  round trip). On the trick-question and code-mixed probes below it does beat cosine, by 8 to 14
+  points.
 - **Given the same 5 examples inside its descriptions, Jev reaches 90.4%** (method B+, run on
   the first 249 messages only: [`results/first_249/REPORT.md`](results/first_249/REPORT.md)).
   With those exact examples the classifier scores 86.3% and cosine voting 77.1%. B+ sends about
@@ -244,7 +245,7 @@ each method's answers, for error analysis.
   trick-question probe is new text.
 - Jev results come from a free route. If you change the route, compare within one route,
   not across routes.
-- Jev latency depends heavily on distance to its US-hosted servers.
+- Jev latency was measured from one laptop in India and depends on network distance.
 
 ## License
 

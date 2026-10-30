@@ -6,7 +6,7 @@ larger, to test whether the drop on Hinglish and Tanglish comes only from the En
 Nothing else changes: same samples, same descriptions, same past examples and seeds.
 
 Jev and the cross-encoder are not re-run (they do not use this embedder), so the `REPORT.md`
-files here say Jev "has not been run". Compare with the matching folder one level up.
+files here show only methods A, C and E. Compare with the matching folder one level up.
 
 | Sample | Method | `bge-small-en` | `bge-m3` | Jev, no examples |
 |---|---|---|---|---|
@@ -20,9 +20,11 @@ files here say Jev "has not been run". Compare with the matching folder one leve
 | Trick questions, 105 | A · cosine vs descriptions | 64.8% | 72.4% | 100.0% |
 | Trick questions, 105 | Best of C and E, 35 examples | 64.1% | 76.5% | |
 
-The multilingual model narrows the gap on code-mixed and trick messages but stays 8 to 16
-points below Jev, and it is worse than the English model at matching one-line descriptions on
-English. C and E accuracies are means over the same 3 random draws as everywhere else.
+The multilingual model narrows the gap on code-mixed and trick messages but stays below Jev:
+by 15.5 points on Hinglish, 9.5 on Tanglish and 23.5 on trick questions. It is also worse than
+the English model at matching one-line descriptions on English. C and E accuracies are means
+over the same 3 random draws as everywhere else. On 144 messages the Tanglish lead is borderline
+(exact McNemar p = 0.02 to 0.14 across the draws); the Hinglish lead is clear (p ≤ 0.001).
 
 Reproduce (local, free; downloads about 2.3 GB once):
 
