@@ -18,11 +18,11 @@ A local cross-encoder that reads each message together with each description (me
 | C · cosine vs past examples (top-5 vote) | 10 | 56.2% (range 51.4%–60.0% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 20 | 61.9% (range 59.0%–63.8% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
 | C · cosine vs past examples (top-5 vote) | 35 | 60.6% (range 59.0%–61.9% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 1 | 50.2% (range 47.6%–51.4% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 5 | 64.1% (range 58.1%–68.6% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 10 | 62.5% (range 59.0%–66.7% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 20 | 65.7% (range 63.8%–68.6% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
-| E · classifier trained on past examples | 35 | 64.1% (range 62.9%–65.7% over 3 draws) | 7 ms | 8 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 1 | 50.2% (range 47.6%–51.4% over 3 draws) | 8 ms | 9 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 5 | 64.1% (range 58.1%–68.6% over 3 draws) | 8 ms | 9 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 10 | 62.5% (range 59.0%–66.7% over 3 draws) | 8 ms | 9 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 20 | 65.7% (range 63.8%–68.6% over 3 draws) | 8 ms | 9 ms | 0 | $0.0000 |
+| E · classifier trained on past examples | 35 | 64.1% (range 62.9%–65.7% over 3 draws) | 8 ms | 9 ms | 0 | $0.0000 |
 
 ## How to read this
 
