@@ -1,0 +1,6 @@
+{
+  "catalog_fingerprint": "492678754b2af8fd3eb65a4597d2062eb457e0b89603cdb99ff8a5a08d032e14",
+  "catalog_version": "banking77_intents.v1",
+  "embedding_model": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181",
+  "train_duplicates_removed": "7"
+}

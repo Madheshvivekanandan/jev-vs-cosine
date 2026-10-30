@@ -48,6 +48,18 @@ Claude agents wrote and checked the probe messages; [`probes/README.md`](probes/
 explains how. Read the trick-question row as a worst case for methods that match surface words,
 not as typical traffic.
 
+**Is it just the English-only embedder?** Methods A, C and E embed text with
+`bge-small-en-v1.5`, which is English-only. Re-running them with the multilingual `bge-m3`,
+about 17 times larger ([`results/embedder_bge-m3/`](results/embedder_bge-m3/README.md)),
+narrows the gap but does not close it. Best of C and E with 35 examples per category:
+
+| Probe | `bge-small-en` | `bge-m3` (multilingual) | Jev, no examples |
+|---|---|---|---|
+| English originals (144) | 93.8% | 93.8% | 86.1% |
+| Hinglish (144) | 63.7% | 69.9% | **85.4%** |
+| Tanglish (144) | 64.6% | 67.6% | **77.1%** |
+| Trick questions (105) | 64.1% | 76.5% | **100.0%** |
+
 ### When to trust an answer, and when to ask Jev
 
 `python -m app.main triage` replays the saved predictions, so it calls no model
@@ -221,7 +233,10 @@ each method's answers, for error analysis.
 
 - One dataset (English banking intents, mostly topic-like categories, where cosine is
   strong). Judgement-heavy tasks may look very different.
-- One embedding model (`bge-small`, chosen for speed on a laptop). Larger ones may score higher.
+- One main embedding model (`bge-small-en-v1.5`, English-only, chosen for speed on a laptop).
+  The multilingual `bge-m3` was also run for methods A, C and E
+  ([`results/embedder_bge-m3/`](results/embedder_bge-m3/README.md)); other models may score
+  higher.
 - One cross-encoder (`bge-reranker-v2-m3`, trained for search relevance, not classification).
   A 2026 zero-shot benchmark ([BTZSC](https://arxiv.org/abs/2603.11991)) found larger rerankers
   such as Qwen3-Reranker-8B do much better, so D is a lower bound for the approach.
